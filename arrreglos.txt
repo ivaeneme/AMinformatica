@@ -1,0 +1,11 @@
+//Mejorar el buscador de productos, servicios y usuarios
+//"Agregar clientes" en el rol de Admin esta de más
+Agregar un posible filtro en "usuarios"
+//Agregar logica del filtro de presupuestos en rol Admin
+//En rol clientes el filtro "todos" no trae todos los presupuestos, revisar logica en el modelo
+En rol Admin/Vendedor revisar:
+    //-El modificar un presupuesto, no modifica (REVISAR EL FLUJO)
+    -La factura debe mejorarse visualmente y acomodar los datos que deben verse.
+    //-verificar si hay un control de correos duplicados
+    //-El estado "entregado" que sea la misma condicion que "terminado"
+    -Revisar el control de stock en "guardar item" en el controlador. Si el presupuesto es cancelado, el stock debe volver al punto inicial.

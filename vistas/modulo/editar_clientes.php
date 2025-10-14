@@ -27,7 +27,7 @@ $cliente = ControladorClientes::ctrMostrarClientes($item, $valor);
                 <!-- Campo para el DNI del cliente -->
                 <div class="mb-3">
                     <label for="dni_cliente" class="form-label">DNI</label>
-                    <input type="number" name="dni_cliente" class="form-control" value="<?php echo $cliente["dni_cliente"]; ?>" placeholder="Ingrese el costo del cliente" required>
+                    <input type="text" name="dni_cliente" class="form-control" value="<?php echo $cliente["dni_cliente"]; ?>" placeholder="Ingrese el costo del cliente" required>
                 </div>
 
                 <!--Campo para el email de cliente-->
@@ -39,7 +39,7 @@ $cliente = ControladorClientes::ctrMostrarClientes($item, $valor);
                 <!--Campo para el telefono del cliente-->
                 <div class="mb-3">
                     <label for="telefono_cliente" class="form-label">Telefono</label>
-                    <input type="number" id="telefono_cliente" name="telefono_cliente" class="form-control" value="<?php echo $cliente["telefono_cliente"]?>" required>
+                    <input type="text" id="telefono_cliente" name="telefono_cliente" class="form-control" value="<?php echo $cliente["telefono_cliente"]?>" required>
                 </div>
 
                 <!--Campo para la fecha de nacimiento del cliente-->

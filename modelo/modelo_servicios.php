@@ -20,6 +20,22 @@ class ModeloServicios
             return []; // Devuelve un array vacío en caso de error
         }
     }
+
+        static public function mdlBuscarServicios($filtro)
+    {
+        try {
+            $stmt = Conexion::conectar()->prepare("
+            SELECT * FROM servicio
+            WHERE nombre_servicio LIKE :filtro
+        ");
+            $stmt->bindValue(":filtro", "%" . $filtro . "%", PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
     static public function mdlAgregarServicio($tabla, $datos)
     {
         try {
@@ -89,4 +105,24 @@ class ModeloServicios
             return "error";
         }
     }
+    public function obtenerPorId($id)
+    {
+        $pdo = Conexion::conectar();
+        $stmt = $pdo->prepare("SELECT * FROM servicio WHERE idServicio = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+        static public function listar()
+    {
+        try {
+            $stmt = Conexion::conectar()->prepare("SELECT * FROM servicio");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+
 }

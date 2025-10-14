@@ -6,6 +6,13 @@ class ControladorServicios {
         $respuesta= ModeloServicios::mdlMostrarServicios($item,$valor);
         return $respuesta;
     }
+
+        static public function ctrBuscarServicios($filtro)
+    {
+        return ModeloServicios::mdlBuscarServicios($filtro);
+    }
+
+    
     static public function ctrAgregarServicio()
     {
         if (isset($_POST["nombre_servicio"])) {

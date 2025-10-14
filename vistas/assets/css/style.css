@@ -42,3 +42,4 @@
     position: relative; /* Asegura que los botones queden sobre la tarjeta */
     z-index: 2; /* Los botones estarán por encima de la imagen */
 }
+

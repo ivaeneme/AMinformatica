@@ -3,7 +3,7 @@
 class Conexion
 {
  const HOST = "localhost";
- const DBNAME = "metodologia";
+ const DBNAME = "aminformatica";
  const USER = "root";
  const PASSWORD = "";
  static public function conectar()

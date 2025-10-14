@@ -9,12 +9,22 @@
             <form action="" method="POST" enctype="multipart/form-data">
 
                 <div class="mb-3">
-                    <label for="nombre_servicio" class="form-label">Nombre</label>
-                    <input type="text" id="nombre_servicio" name="nombre_servicio" class="form-control" placeholder="Nombre del producto" required>
+                    <label for="nombre_mercaderia" class="form-label">Nombre</label>
+                    <input type="text" id="nombre_mercaderia" name="nombre_mercaderia" class="form-control" placeholder="Nombre del producto" required>
                 </div>
                 <div class="mb-3">
                     <label for="costo_mercaderia" class="form-label">Costo</label>
                     <input type="number" id="costo_mercaderia" name="costo_mercaderia" class="form-control" placeholder="Costo del producto" min="0" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="stock_mercaderia" class="form-label"> Stock</label>
+                    <input type="number" name="stock_mercaderia" class="form-control" placeholder="Ingrese el stock" min="0" required>
+                </div>
+      
+                <div class="mb-3">
+                    <label for="marca" class="form-label">Marca</label>
+                    <input type="text" name="marca" class="form-control"  placeholder="Ingrese la marca" required>
                 </div>
                 <div class="mb-3">
                     <label for="imagen_mercaderia" class="form-label">Imagen</label>
@@ -26,7 +36,7 @@
                         <option value="" disabled selected>Seleccione un tipo</option>
                         <?php
                         // Conexión a la base de datos
-                        $conexion = new mysqli("localhost", "root", "", "metodologia");
+                        $conexion = new mysqli("localhost", "root", "", "aminformatica");
 
                         // Verificar conexión
                         if ($conexion->connect_error) {

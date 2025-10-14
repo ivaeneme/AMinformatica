@@ -35,11 +35,11 @@
                                         echo '<p class="dropdown-item">Hola, soy técnico.</p>';
                                         break;
                                     default:
-                                        echo '<p class="dropdown-item">Hola, usuario.</p>';
+                                        echo '<p class="dropdown-item">Hola, soy admin.</p>';
+                                        break;
                                 }
                             }
                             ?>
-                            <a href="c"></a>
                             <a href="<?php echo $url; ?>salir" class="dropdown-item notify-item">
                                 <span>Salir <i class="fa-solid fa-right-from-bracket"></i></span>
                             </a>

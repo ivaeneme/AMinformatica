@@ -13,12 +13,14 @@ if ($clientes) {
         <h1>Clientes</h1>
         <div class="card">
 
-            <div class="card-header">
-                <a href="agregar_clientes" class="btn btn-info">Agregar clientes</a>
-            </div><!-- end card header -->
+            <!-- <div class="card-header">
+                <?php if ($_SESSION["Rol_idRol"] == 4): ?>
+                    <a href="agregar_clientes" class="btn btn-info">Agregar Clientes</a>
+                <?php endif; ?>
+            </div>end card header -->
 
             <div class="card-body">
-                <table id="datatable" class="table table-bordered table-striped dt-responsive table-responsive nowrap">
+                <table class="table table-bordered table-striped dt-responsive table-responsive nowrap">
                     <thead>
                         <tr>
                             <th>Nombre</th>
@@ -48,10 +50,14 @@ if ($clientes) {
                                 </td>
 
 
-                                <td><a href="index.php?pagina=editar_clientes&idCliente=<?php echo $cliente["idCliente"] ?>"
+                                <td><?php if ($_SESSION["Rol_idRol"] == 4): ?>
+                                    <a href="index.php?pagina=editar_clientes&idCliente=<?php echo $cliente["idCliente"] ?>"
                                         class="btn btn-warning"><i class="fas fa-edit"></i></a>
 
-                                    <button class="btn btn-danger btnEliminarClientes" idCliente=<?php echo $cliente["idCliente"]; ?>><i class="fas fa-trash"></i></button>
+                                    <a href="index.php?pagina=clientes&idCliente=<?php echo $cliente['idCliente']; ?>" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que querés eliminar este cliente?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php } ?>
@@ -65,5 +71,5 @@ if ($clientes) {
 
 <?php
 $eliminar = new ControladorClientes();
-$eliminar->ctrEliminarCliente();
+$eliminar->ctrEliminarClientes();
 ?>

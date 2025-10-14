@@ -24,7 +24,7 @@
                                         <label class="form-label">Contraseña</label>
                                         <input class="form-control form-control-lg" type="password" name="contrasena" placeholder="Ingresa tu contraseña" />
                                         <small>
-                                            <a href="index.html">¿Te olvidaste la contraseña?</a>
+                                            <a href="recuperarcontraseña.php">¿Te olvidaste la contraseña?</a>
                                         </small>
                                     </div>
                                     <div>
@@ -37,6 +37,7 @@
                                     </div>
                                     <div class="text-center mt-3">
                                         <button type="submit" class="btn btn-lg btn-primary">iniciar Sesion</button>
+                                        <p>¿No tenés cuenta? <a href="index.php?pagina=registro_clientes">Crear una nueva cuenta</a></p>
                                     </div>
                                     <?php
                                     $ingreso = new ControladorUsuarios();

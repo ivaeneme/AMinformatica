@@ -30,6 +30,18 @@ $productos = ControladorProductos::ctrMostrarProductos($item, $valor);
                     <input type="number" step="0.01" name="costo_mercaderia" class="form-control" value="<?php echo $productos["costo_mercaderia"]; ?>" placeholder="Ingrese el costo del producto" required>
                 </div>
 
+                <!-- campo para el stock del producto -->
+                <div class="mb-3">
+                    <label for="stock_mercaderia" class="form-label"> Stock</label>
+                    <input type="number" name="stock_mercaderia" class="form-control" value="<?php echo $productos["stock_mercaderia"] ?>" required>
+                </div>
+
+                <!-- campo para la marca del producto -->
+                <div class="mb-3">
+                    <label for="marca" class="form-label">Marca</label>
+                    <input type="text" name="marca" class="form-control" value="<?php echo $productos['marca']; ?>" placeholder="Ingrese la marca" required>
+                </div>
+
                 <!-- Campo para seleccionar la categoría -->
                 <div class="mb-3">
                     <label for="idtipo_mercaderia" class="form-label">Categoría</label>

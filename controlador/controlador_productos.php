@@ -6,6 +6,13 @@ class ControladorProductos
         $respuesta = ModeloProductos::mdlMostrarProductos($item, $valor);
         return $respuesta;
     }
+
+    
+    static public function ctrBuscarProductos($filtro)
+    {
+        return ModeloProductos::mdlBuscarProductos($filtro);
+    }
+
     static public function ctrAgregarProducto()
     {
         if (isset($_POST["nombre_mercaderia"])) {
@@ -15,7 +22,7 @@ class ControladorProductos
             // Verificar si se subió una imagen
             $rutaImagen = "";
             if (isset($_FILES["imagen_mercaderia"]["tmp_name"]) && !empty($_FILES["imagen_mercaderia"]["tmp_name"])) {
-                $directorio = "vistas\assets\img"; // Directorio donde se guardarán las imágenes
+                $directorio = "vistas/assets/img/"; // Directorio donde se guardarán las imágenes
     
                 // Crear el directorio si no existe
                 if (!file_exists($directorio)) {
@@ -43,7 +50,10 @@ class ControladorProductos
                 "nombre_mercaderia" => $_POST["nombre_mercaderia"],
                 "costo_mercaderia" => $_POST["costo_mercaderia"],
                 "imagen_mercaderia" => $rutaImagen, // Ruta de la imagen
-                "idtipo_mercaderia" => $_POST["idtipo_mercaderia"]
+                "idtipo_mercaderia" => $_POST["idtipo_mercaderia"],
+                "stock_mercaderia" => $_POST["stock_mercaderia"],
+                "marca" => $_POST["marca"]
+                
             );
     
             $url = ControladorPlantilla::url() . "productos";
@@ -82,7 +92,7 @@ class ControladorProductos
             // Manejo de la nueva imagen
             $rutaImagen = $_POST["imagen_actual"]; // Por defecto, conserva la imagen actual
             
-            if (isset($_FILES["imagen_mercaderia"]["tmp_name"])) {
+            if (!empty($_FILES["imagen_mercaderia"]["tmp_name"])) {
                 // Directorio donde se guardan las imágenes
                 $directorio = "vistas\assets\img";
                 
@@ -101,7 +111,10 @@ class ControladorProductos
                 "nombre_mercaderia" => $_POST["nombre_mercaderia"],
                 "costo_mercaderia" => $_POST["costo_mercaderia"],
                 "idtipo_mercaderia" => $_POST["idtipo_mercaderia"],
+                "stock_mercaderia" => $_POST["stock_mercaderia"],
+                "marca" => $_POST["marca"],
                 "imagen_mercaderia" => $rutaImagen
+                
             );
     
             // Llamar al modelo para actualizar
