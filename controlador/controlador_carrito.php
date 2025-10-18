@@ -89,6 +89,7 @@ class ControladorCarrito
             foreach ($_SESSION['carrito'] as $item) {
                 $tipo = $item['tipo'];
                 $idProducto = null;
+                $estado_servicio = null; // <- inicialización segura
 
                 if ($tipo === 'producto') {
 
@@ -96,7 +97,9 @@ class ControladorCarrito
                     $idProducto = $modeloCarrito->insertarProductoPresupuesto($item['id'], null, $item['cantidad']);
                 } else {
                     // Insertar servicio con mercaderia_id = NULL
-                    $idProducto = $modeloCarrito->insertarProductoPresupuesto(null, $item['id'], $item['cantidad']);
+                    $estado_servicio = 1; // Estado inicial “En proceso”
+                    $idProducto = $modeloCarrito->insertarProductoPresupuesto(null, $item['id'], $item['cantidad'], $estado_servicio);
+                    
                 }
 
                 // Insertar en listapresupuesto
@@ -195,7 +198,7 @@ class ControladorCarrito
 
             $estadoActual = (int)$presupuesto['estado_presupuesto'];
 
-            // Definir las transiciones válidas
+            // Transiciones válidas
             $transicionesValidas = [
                 1 => [2, 6], // Creado → Aprobado o Cancelado
                 2 => [3, 6], // Aprobado → En proceso o Cancelado
@@ -205,7 +208,6 @@ class ControladorCarrito
                 6 => []      // Cancelado → No se puede cambiar
             ];
 
-            // Validar si el nuevo estado es una transición permitida
             if (!in_array($nuevoEstado, $transicionesValidas[$estadoActual] ?? [])) {
                 echo "<script>
                 alert('Transición de estado no permitida.'); 
@@ -217,25 +219,23 @@ class ControladorCarrito
             // Validar servicios terminados para "Terminado" o "Entregado"
             if (in_array($nuevoEstado, [4, 5])) {
                 $servicios = $modeloCarrito->obtenerServiciosPorPresupuesto($idPresupuesto);
-
                 foreach ($servicios as $servicio) {
                     if ((int)$servicio['estado_servicio'] !== 2) {
                         $mensaje = $nuevoEstado === 4
                             ? 'No se puede marcar como "Terminado" hasta que todos los servicios estén terminados.'
                             : 'No se puede marcar como "Entregado" hasta que todos los servicios estén terminados.';
-
                         echo "<script>
-                            alert('$mensaje'); 
-                            window.location.href='index.php?controlador=carrito&accion=gestionar';
-                        </script>";
+                        alert('$mensaje'); 
+                        window.location.href='index.php?controlador=carrito&accion=gestionar';
+                    </script>";
                         return;
                     }
                 }
             }
-            // 🚀 NUEVO BLOQUE: descontar stock si el presupuesto pasa a "Aprobado"
-            if ($nuevoEstado === 2) {
-                $productosSinStock = $modeloCarrito->descontarStockPorPresupuesto($idPresupuesto);
 
+            // Gestionar stock
+            if ($nuevoEstado === 2) { // Aprobado
+                $productosSinStock = $modeloCarrito->descontarStockPorPresupuesto($idPresupuesto);
                 if ($productosSinStock === false) {
                     echo "<script>
                     alert('Error al procesar stock.');
@@ -243,23 +243,33 @@ class ControladorCarrito
                 </script>";
                     return;
                 }
-
                 if (!empty($productosSinStock)) {
                     $lista = implode(", ", $productosSinStock);
                     echo "<script>
-                        alert('No hay stock suficiente para: $lista. No se puede aprobar el presupuesto.');
-                        window.location.href='index.php?controlador=carrito&accion=gestionar';
-                    </script>";
-                    return; // Evita continuar si no hay stock
+                    alert('No hay stock suficiente para: $lista. No se puede aprobar el presupuesto.');
+                    window.location.href='index.php?controlador=carrito&accion=gestionar';
+                </script>";
+                    return;
                 }
             }
 
-            // Actualizar estado si pasa todas las validaciones
+            if ($nuevoEstado === 6) { // Cancelado
+                $productosDevueltos = $modeloCarrito->devolverStockPorPresupuesto($idPresupuesto);
+                if ($productosDevueltos === false) {
+                    echo "<script>
+                    alert('Error al devolver stock.');
+                    window.location.href='index.php?controlador=carrito&accion=gestionar';
+                </script>";
+                    return;
+                }
+            }
+
+            // Actualizar estado finalmente
             $modeloCarrito->actualizarEstadoPresupuesto($idPresupuesto, $nuevoEstado);
             echo "<script>
-                alert('Estado actualizado correctamente');
-                window.location.href='index.php?controlador=carrito&accion=gestionar';
-            </script>";
+            alert('Estado actualizado correctamente');
+            window.location.href='index.php?controlador=carrito&accion=gestionar';
+        </script>";
         } else {
             echo "<script>
             alert('Petición inválida');
@@ -267,6 +277,7 @@ class ControladorCarrito
         </script>";
         }
     }
+
 
 
     public function detalle()

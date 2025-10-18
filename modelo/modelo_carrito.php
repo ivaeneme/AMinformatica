@@ -81,13 +81,17 @@ class ModeloCarrito
         return $pdo->lastInsertId();
     }
 
-    public function insertarProductoPresupuesto($mercaderiaId, $servicioId, $cantidad)
+    public function insertarProductoPresupuesto($mercaderiaId, $servicioId, $cantidad, $estado_servicio = null)
     {
         $pdo = Conexion::conectar();
-        $stmt = $pdo->prepare("INSERT INTO productos (Mercaderia_idMercaderia, Servicio_idServicio, cantidad_productos) VALUES (?, ?, ?)");
-        $stmt->execute([$mercaderiaId, $servicioId, $cantidad]);
+        $stmt = $pdo->prepare("
+        INSERT INTO productos (Mercaderia_idMercaderia, Servicio_idServicio, cantidad_productos, estado_servicio)
+        VALUES (?, ?, ?, ?)
+    ");
+        $stmt->execute([$mercaderiaId, $servicioId, $cantidad, $estado_servicio]);
         return $pdo->lastInsertId();
     }
+
 
     public function insertarEnListaPresupuesto($idProducto, $descripcion, $marca, $modelo, $subtotal, $idPresupuesto, $cantidad)
     {
@@ -665,5 +669,51 @@ class ModeloCarrito
         }
     }
 
+
+    public function devolverStockPorPresupuesto($idPresupuesto)
+    {
+        try {
+            $pdo = Conexion::conectar();
+
+            // Traer las mercaderías asociadas al presupuesto
+            $sqlItems = "SELECT p.Mercaderia_idMercaderia AS idMercaderia, lp.cantidad
+                     FROM listapresupuesto lp
+                     INNER JOIN productos p ON lp.Productos_idProductos = p.idProductos
+                     WHERE lp.idPresupuesto = :idPresupuesto
+                     AND p.Mercaderia_idMercaderia IS NOT NULL"; // Evita servicios
+            $stmt = $pdo->prepare($sqlItems);
+            $stmt->bindParam(':idPresupuesto', $idPresupuesto, PDO::PARAM_INT);
+            $stmt->execute();
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (empty($items)) {
+                return []; // No hay mercadería que devolver
+            }
+
+            // Iniciamos transacción
+            $pdo->beginTransaction();
+
+            foreach ($items as $item) {
+                $sqlUpdate = "UPDATE mercaderia 
+                          SET stock_mercaderia = stock_mercaderia + :cantidad 
+                          WHERE idMercaderia = :idMercaderia";
+                $stmtUpdate = $pdo->prepare($sqlUpdate);
+                $stmtUpdate->bindParam(':cantidad', $item['cantidad'], PDO::PARAM_INT);
+                $stmtUpdate->bindParam(':idMercaderia', $item['idMercaderia'], PDO::PARAM_INT);
+                $stmtUpdate->execute();
+            }
+
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log("Error al devolver stock: " . $e->getMessage());
+            return false;
+        }
+    }
+
+  
 
 }
