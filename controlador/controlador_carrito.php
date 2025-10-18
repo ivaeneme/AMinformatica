@@ -253,16 +253,18 @@ class ControladorCarrito
                 }
             }
 
-            if ($nuevoEstado === 6) { // Cancelado
+            // Solo devolver stock si antes se descontó (Aprobado, En proceso o Terminado)
+            if ($nuevoEstado === 6 && in_array($estadoActual, [2, 3, 4])) {
                 $productosDevueltos = $modeloCarrito->devolverStockPorPresupuesto($idPresupuesto);
                 if ($productosDevueltos === false) {
                     echo "<script>
-                    alert('Error al devolver stock.');
-                    window.location.href='index.php?controlador=carrito&accion=gestionar';
-                </script>";
+                        alert('Error al devolver stock.');
+                        window.location.href='index.php?controlador=carrito&accion=gestionar';
+                    </script>";
                     return;
                 }
             }
+
 
             // Actualizar estado finalmente
             $modeloCarrito->actualizarEstadoPresupuesto($idPresupuesto, $nuevoEstado);
