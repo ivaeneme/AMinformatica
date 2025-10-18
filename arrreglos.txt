@@ -13,3 +13,4 @@ En rol Admin/Vendedor revisar:
 Arreglar el recuperar contraseña en el login.
 Chequear el tema del rol del tecnico, si un presupuesto con servicio se cancela que deberia pasar en el servicios_pendientes
 Revisar la eliminacion en cascada de tabla productos
+https://1337x.to/
