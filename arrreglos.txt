@@ -9,3 +9,4 @@ En rol Admin/Vendedor revisar:
     //-verificar si hay un control de correos duplicados
     //-El estado "entregado" que sea la misma condicion que "terminado"
     -Revisar el control de stock en "guardar item" en el controlador. Si el presupuesto es cancelado, el stock debe volver al punto inicial.
+Arreglar el recuperar contraseña en el login.

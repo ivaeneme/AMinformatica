@@ -91,11 +91,6 @@ class ControladorCarrito
                 $idProducto = null;
 
                 if ($tipo === 'producto') {
-                    // Validar stock
-                    $resultadoStock = $modeloProductos->actualizarStock($item['id'], $item['cantidad']);
-                    if ($resultadoStock !== "ok") {
-                        throw new Exception("Error al actualizar stock del producto ID {$item['id']}");
-                    }
 
                     // Insertar producto con servicio_id = NULL
                     $idProducto = $modeloCarrito->insertarProductoPresupuesto($item['id'], null, $item['cantidad']);
@@ -230,21 +225,41 @@ class ControladorCarrito
                             : 'No se puede marcar como "Entregado" hasta que todos los servicios estén terminados.';
 
                         echo "<script>
-                        alert('$mensaje'); 
-                        window.location.href='index.php?controlador=carrito&accion=gestionar';
-                    </script>";
+                            alert('$mensaje'); 
+                            window.location.href='index.php?controlador=carrito&accion=gestionar';
+                        </script>";
                         return;
                     }
+                }
+            }
+            // 🚀 NUEVO BLOQUE: descontar stock si el presupuesto pasa a "Aprobado"
+            if ($nuevoEstado === 2) {
+                $productosSinStock = $modeloCarrito->descontarStockPorPresupuesto($idPresupuesto);
+
+                if ($productosSinStock === false) {
+                    echo "<script>
+                    alert('Error al procesar stock.');
+                    window.location.href='index.php?controlador=carrito&accion=gestionar';
+                </script>";
+                    return;
+                }
+
+                if (!empty($productosSinStock)) {
+                    $lista = implode(", ", $productosSinStock);
+                    echo "<script>
+                        alert('No hay stock suficiente para: $lista. No se puede aprobar el presupuesto.');
+                        window.location.href='index.php?controlador=carrito&accion=gestionar';
+                    </script>";
+                    return; // Evita continuar si no hay stock
                 }
             }
 
             // Actualizar estado si pasa todas las validaciones
             $modeloCarrito->actualizarEstadoPresupuesto($idPresupuesto, $nuevoEstado);
-
             echo "<script>
-            alert('Estado actualizado correctamente');
-            window.location.href='index.php?controlador=carrito&accion=gestionar';
-        </script>";
+                alert('Estado actualizado correctamente');
+                window.location.href='index.php?controlador=carrito&accion=gestionar';
+            </script>";
         } else {
             echo "<script>
             alert('Petición inválida');

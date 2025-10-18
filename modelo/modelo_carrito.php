@@ -604,4 +604,66 @@ class ModeloCarrito
             return ['error' => 'Error al eliminar el ítem: ' . $e->getMessage()];
         }
     }
+
+    public function descontarStockPorPresupuesto($idPresupuesto)
+    {
+        try {
+            $pdo = Conexion::conectar();
+
+            // Traer todos los productos ligados al presupuesto con su mercadería y cantidad
+            $sqlItems = "
+            SELECT m.idMercaderia, m.nombre_mercaderia, m.stock_mercaderia, lp.cantidad
+            FROM listapresupuesto lp
+            INNER JOIN productos p ON lp.Productos_idProductos = p.idProductos
+            INNER JOIN mercaderia m ON p.Mercaderia_idMercaderia = m.idMercaderia
+            WHERE lp.idPresupuesto = :idPresupuesto
+        ";
+            $stmt = $pdo->prepare($sqlItems);
+            $stmt->bindParam(':idPresupuesto', $idPresupuesto, PDO::PARAM_INT);
+            $stmt->execute();
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (!$items) return []; // no hay mercaderías para este presupuesto
+
+            $productosSinStock = [];
+            $pdo->beginTransaction();
+
+            foreach ($items as $item) {
+                $stockActual = (int)$item['stock_mercaderia'];
+                $cantidad = (int)$item['cantidad'];
+                $nombre = $item['nombre_mercaderia'];
+
+                if ($stockActual < $cantidad) {
+                    $productosSinStock[] = $nombre;
+                }
+            }
+
+            if (!empty($productosSinStock)) {
+                $pdo->rollBack();
+                return $productosSinStock; // no alcanza stock
+            }
+
+            // Descontar stock
+            foreach ($items as $item) {
+                $sqlUpdate = "
+                UPDATE mercaderia
+                SET stock_mercaderia = stock_mercaderia - :cantidad
+                WHERE idMercaderia = :idMercaderia
+            ";
+                $stmtUpdate = $pdo->prepare($sqlUpdate);
+                $stmtUpdate->bindParam(':cantidad', $item['cantidad'], PDO::PARAM_INT);
+                $stmtUpdate->bindParam(':idMercaderia', $item['idMercaderia'], PDO::PARAM_INT);
+                $stmtUpdate->execute();
+            }
+
+            $pdo->commit();
+            return [];
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            error_log("Error al descontar stock: " . $e->getMessage());
+            return false;
+        }
+    }
+
+
 }
