@@ -1,12 +1,6 @@
 <?php
 class ControladorCarrito
 {
-    // public function index()
-    // {
-    //     $modelo = new ModeloProductos();
-    //     $productos = $modelo->listarDisponibles(); // Método para obtener productos con stock > 0
-    //     include 'vistas/carrito/tienda.php';
-    // }
 
     public function agregar()
     {
@@ -56,15 +50,13 @@ class ControladorCarrito
 
     public function ver()
     {
+
         include 'vistas/modulo/vercarrito.php';
     }
 
 
     public function confirmar()
-    {
-        ini_set('display_errors', 1);
-        ini_set('display_startup_errors', 1);
-        error_reporting(E_ALL);
+    {       
 
         if (!isset($_SESSION['id_cliente']) || empty($_SESSION['carrito'])) {
             echo "<script>alert('Debe estar logueado como cliente y tener productos en el carrito.'); window.location.href='index.php';</script>";
@@ -90,6 +82,7 @@ class ControladorCarrito
                 $tipo = $item['tipo'];
                 $idProducto = null;
                 $estado_servicio = null; // <- inicialización segura
+                $marca = $tipo === 'producto' ? ($item['marca'] ?? 'Sin marca') : '-';
 
                 if ($tipo === 'producto') {
 
@@ -106,8 +99,7 @@ class ControladorCarrito
                 $idListaPresupuesto = $modeloCarrito->insertarEnListaPresupuesto(
                     $idProducto,
                     $item['nombre'],
-                    'Generico',
-                    'ModeloX',
+                    $marca,
                     $item['precio'] * $item['cantidad'],
                     $idPresupuesto,
                     $item['cantidad']
@@ -294,6 +286,7 @@ class ControladorCarrito
 
         // 1. Presupuesto + Cliente
         $presupuesto = $modeloCarrito->obtenerPresupuestoConCliente($idPresupuesto);
+        // $modeloCarrito->actualizarTotalPresupuesto($idPresupuesto);
         if (!$presupuesto) {
             echo "<div class='alert alert-warning'>Presupuesto no encontrado.</div>";
             return;
@@ -370,7 +363,8 @@ class ControladorCarrito
 
 
     public function verPresupuesto()
-    {
+    {   
+        
         $this->detalle();
     }
 
@@ -384,6 +378,7 @@ class ControladorCarrito
         $idPresupuesto = (int)$_GET['idPresupuesto'];
 
         $modeloCarrito = new ModeloCarrito();
+
         // Validar que el presupuesto exista
         if (!$modeloCarrito->presupuestoExiste($idPresupuesto)) {
             echo "<script>alert('Presupuesto no encontrado'); window.location.href='index.php';</script>";
@@ -393,11 +388,22 @@ class ControladorCarrito
         $modeloProductos = new ModeloProductos();
         $modeloServicios = new ModeloServicios();
 
+        // Listar productos y servicios
         $productos = $modeloProductos->listarDisponibles();
         $servicios = $modeloServicios->listar();
 
+        // 🔹 Filtrar servicios que ya existen en el presupuesto
+        $serviciosExistentes = $modeloCarrito->obtenerIdServicioPorPresupuesto($idPresupuesto);
+        $idsServiciosExistentes = array_column($serviciosExistentes, 'idServicio');
+
+        $serviciosDisponibles = array_filter($servicios, function ($s) use ($idsServiciosExistentes) {
+            return !in_array($s['idServicio'], $idsServiciosExistentes);
+        });
+
+        // Enviar a la vista
         include 'vistas/modulo/agregar_item.php';
     }
+
 
 
 
@@ -462,11 +468,11 @@ class ControladorCarrito
 
 
 
-    public function actualizarItem()
-    {
+public function actualizarItem()
+{
+    try {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo "<script>alert('Petición inválida'); window.location.href='index.php';</script>";
-            return;
+            throw new Exception('Petición inválida');
         }
 
         $idItem = (int)$_POST['idListaPresupuesto'];
@@ -476,20 +482,34 @@ class ControladorCarrito
         $idServicio = !empty($_POST['idServicio']) ? (int)$_POST['idServicio'] : null;
 
         if (!$idProducto && !$idServicio) {
-            echo "<script>alert('Debes seleccionar un producto o un servicio'); window.history.back();</script>";
-            return;
+            throw new Exception('Debes seleccionar un producto o un servicio');
         }
 
         $modeloCarrito = new ModeloCarrito();
-        $resultado = $modeloCarrito->actualizarItemEnPresupuesto($idItem, $idPresupuesto, $idProducto, $idServicio, $cantidad);
+        $resultado = $modeloCarrito->actualizarItemEnPresupuesto(
+            $idItem,
+            $idPresupuesto,
+            $idProducto,
+            $idServicio,
+            $cantidad
+        );
 
         if (isset($resultado['error'])) {
-            echo "<script>alert('{$resultado['error']}'); window.history.back();</script>";
-            return;
+            throw new Exception($resultado['error']);
         }
+
         echo "<script>alert('Ítem actualizado correctamente'); 
-        window.location.href='index.php?controlador=carrito&accion=verPresupuesto&id={$idPresupuesto}';</script>";
+              window.location.href='index.php?controlador=carrito&accion=verPresupuesto&id={$idPresupuesto}';</script>";
+
+    } catch (Throwable $e) {
+        echo "<pre style='background:#111;color:#0f0;padding:15px;border-radius:10px'>
+        <b>Error:</b> {$e->getMessage()}<br>
+        <b>Archivo:</b> {$e->getFile()}<br>
+        <b>Línea:</b> {$e->getLine()}
+        </pre>";
     }
+}
+
 
 
     public function eliminarItem()

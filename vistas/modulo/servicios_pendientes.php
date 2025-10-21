@@ -10,8 +10,6 @@
                     <th>Cliente</th>
                     <th>Presupuesto</th>
                     <th>Descripción</th>
-                    <th>Marca</th>
-                    <th>Modelo</th>
                     <th>Cantidad</th>
                     <th>Estado</th>
                     <th>Acción</th>
@@ -23,8 +21,6 @@
                         <td><?= htmlspecialchars($servicio['nombre_cliente']) ?></td>
                         <td>#<?= $servicio['idPresupuesto'] ?></td>
                         <td><?= htmlspecialchars($servicio['descripcion']) ?></td>
-                        <td><?= htmlspecialchars($servicio['marca']) ?></td>
-                        <td><?= htmlspecialchars($servicio['modelo']) ?></td>
                         <td><?= htmlspecialchars($servicio['cantidad']) ?></td>
                         <td>
                             <?php

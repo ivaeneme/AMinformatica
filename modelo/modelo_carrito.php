@@ -1,6 +1,9 @@
 <?php
 class ModeloCarrito
 {
+
+    // ====================================== CARRITO (cliente)=========================================================
+
     public function obtenerProductoPorId($id)
     {
         $modeloProductos = new ModeloProductos();
@@ -36,6 +39,7 @@ class ModeloCarrito
                 'nombre' => $producto['nombre_mercaderia'],
                 'precio' => $producto['costo_mercaderia'],
                 'cantidad' => $cantidad,
+                'marca' => $producto['marca'],
                 'tipo' => 'producto'
             ];
         }
@@ -71,6 +75,9 @@ class ModeloCarrito
         return ['ok' => true];
     }
 
+
+    // ================================================== GESTION DE PRESUPUESTO (vendedor/admin)=============================================================
+
     public function mdlinsertarPresupuesto($clienteId, $total)
     {
         $pdo = Conexion::conectar();
@@ -93,13 +100,13 @@ class ModeloCarrito
     }
 
 
-    public function insertarEnListaPresupuesto($idProducto, $descripcion, $marca, $modelo, $subtotal, $idPresupuesto, $cantidad)
+    public function insertarEnListaPresupuesto($idProducto, $descripcion, $marca, $subtotal, $idPresupuesto, $cantidad)
     {
         $pdo = Conexion::conectar();
         $stmt = $pdo->prepare("INSERT INTO listapresupuesto 
-            (Productos_idProductos, descripcion, marca, modelo, costoSubTotal, idPresupuesto, cantidad)
-            VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$idProducto, $descripcion, $marca, $modelo, $subtotal, $idPresupuesto, $cantidad]);
+            (Productos_idProductos, descripcion, marca, costoSubTotal, idPresupuesto, cantidad)
+            VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$idProducto, $descripcion, $marca, $subtotal, $idPresupuesto, $cantidad]);
         return $pdo->lastInsertId();
     }
 
@@ -125,7 +132,7 @@ class ModeloCarrito
         $pdo = Conexion::conectar();
 
         $sql = "
-        SELECT p.*, lp.descripcion, lp.marca, lp.modelo, lp.costoSubTotal, lp.cantidad
+        SELECT p.*, lp.descripcion, lp.marca, lp.costoSubTotal, lp.cantidad
         FROM presupuesto p
         LEFT JOIN listapresupuesto lp ON lp.idPresupuesto = p.idPresupuesto
         WHERE p.Cliente_idCliente = ?
@@ -179,7 +186,7 @@ class ModeloCarrito
 
         $sql = "
         SELECT p.idPresupuesto, p.fechaEmision, p.costoTotal, p.estado_presupuesto,
-               c.nombre_cliente, lp.descripcion, lp.marca, lp.modelo, lp.costoSubTotal, lp.cantidad,
+               c.nombre_cliente, lp.descripcion, lp.marca, lp.costoSubTotal, lp.cantidad,
                pr.estado_servicio
         FROM presupuesto p
         LEFT JOIN clientes c ON c.idCliente = p.Cliente_idCliente
@@ -242,7 +249,7 @@ class ModeloCarrito
     {
         $pdo = Conexion::conectar();
         $stmt = $pdo->prepare("
-        SELECT lp.idListaPresupuesto, lp.descripcion, lp.marca, lp.modelo, lp.cantidad, lp.costoSubTotal
+        SELECT lp.idListaPresupuesto,lp.idPresupuesto, lp.descripcion, lp.marca, lp.cantidad, lp.costoSubTotal
         FROM listapresupuesto lp
         WHERE lp.idPresupuesto = ?
     ");
@@ -258,30 +265,6 @@ class ModeloCarrito
         return $stmt->fetchColumn(); // Devuelve null si no existe
     }
 
-    public function obtenerTareasTecnico()
-    {
-        $pdo = Conexion::conectar();
-        $stmt = $pdo->prepare("
-        SELECT p.idPresupuesto, c.nombre_cliente, pr.idProductos, pr.estado_servicio,
-               lp.descripcion, lp.marca, lp.modelo, lp.cantidad
-        FROM productos pr
-        INNER JOIN listapresupuesto lp ON lp.Productos_idProductos = pr.idProductos
-        INNER JOIN presupuesto p ON lp.idPresupuesto = p.idPresupuesto
-        INNER JOIN clientes c ON p.Cliente_idCliente = c.idCliente
-        WHERE pr.Servicio_idServicio IS NOT NULL
-        ORDER BY p.fechaEmision DESC
-    ");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-
-    public function actualizarEstadoServicio($idProducto, $estado)
-    {
-        $pdo = Conexion::conectar();
-        $stmt = $pdo->prepare("UPDATE productos SET estado_servicio = ? WHERE idProductos = ?");
-        return $stmt->execute([$estado, $idProducto]);
-    }
 
     public function borrarPresupuestoSiPermitido($idPresupuesto)
     {
@@ -364,7 +347,34 @@ class ModeloCarrito
     }
 
 
-    //ABM para los detalles del presupuesto//
+
+
+
+    // ===================================================== DETALLE DE PRESPUESTO =============================================================
+
+        public function obtenerEstadoPresupuesto($idPresupuesto)
+    {
+        $pdo = Conexion::conectar();
+        $stmt = $pdo->prepare("SELECT estado FROM presupuesto WHERE idPresupuesto = ?");
+        $stmt->execute([$idPresupuesto]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function obtenerIdServicioPorPresupuesto($idPresupuesto)
+    {
+        $pdo = Conexion::conectar();
+        $stmt = $pdo->prepare("
+        SELECT s.idServicio 
+        FROM servicio s
+        INNER JOIN productos p ON p.Servicio_idServicio = s.idServicio
+        INNER JOIN listapresupuesto lp ON lp.Productos_idProductos = p.idProductos
+        WHERE lp.idPresupuesto = :idPresupuesto
+    ");
+        $stmt->bindParam(':idPresupuesto', $idPresupuesto, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 
     public function presupuestoExiste($idPresupuesto)
     {
@@ -397,7 +407,7 @@ class ModeloCarrito
                 $servicios = array_column($servicios, null, 'idServicio'); // índice por id
             }
 
-            // 3️⃣ Iniciar una sola transacción
+            // 3️⃣ Iniciar transacción
             $pdo->beginTransaction();
 
             foreach ($productosSeleccionados as $idProducto) {
@@ -414,19 +424,37 @@ class ModeloCarrito
                     return ['error' => "No hay suficiente stock del producto {$merc['nombre_mercaderia']}"];
                 }
 
-                // Insert en tabla productos
-                $stmt = $pdo->prepare("INSERT INTO productos (Mercaderia_idMercaderia, cantidad_productos) VALUES (?, ?)");
-                $stmt->execute([$idProducto, $cantidad]);
-                $idProd = $pdo->lastInsertId();
+                // 🔹 Verificar si el producto ya existe en el presupuesto
+                $stmtCheck = $pdo->prepare("SELECT idListaPresupuesto, cantidad FROM listapresupuesto WHERE idPresupuesto = ? AND Productos_idProductos IN (SELECT idProductos FROM productos WHERE Mercaderia_idMercaderia = ?)");
+                $stmtCheck->execute([$idPresupuesto, $idProducto]);
+                $existe = $stmtCheck->fetch(PDO::FETCH_ASSOC);
 
-                // Insert en lista de presupuesto
-                $stmt = $pdo->prepare("INSERT INTO listapresupuesto 
-                (Productos_idProductos, descripcion, marca, modelo, costoSubTotal, idPresupuesto, cantidad)
+                if ($existe) {
+                    // 🔹 Actualizar cantidad y subtotal
+                    $nuevaCantidad = $existe['cantidad'] + $cantidad;
+                    $subtotal = $merc['costo_mercaderia'] * $nuevaCantidad;
+
+                    $stmtUpdate = $pdo->prepare("UPDATE listapresupuesto SET cantidad = ?, costoSubTotal = ? WHERE idListaPresupuesto = ?");
+                    $stmtUpdate->execute([$nuevaCantidad, $subtotal, $existe['idListaPresupuesto']]);
+
+                    // 🔹 Actualizar cantidad en tabla productos
+                    $stmtProd = $pdo->prepare("UPDATE productos SET cantidad_productos = ? WHERE idProductos = (SELECT Productos_idProductos FROM listapresupuesto WHERE idListaPresupuesto = ?)");
+                    $stmtProd->execute([$nuevaCantidad, $existe['idListaPresupuesto']]);
+                } else {
+                    // 🔹 Insert normal como antes
+                    $stmt = $pdo->prepare("INSERT INTO productos (Mercaderia_idMercaderia, cantidad_productos) VALUES (?, ?)");
+                    $stmt->execute([$idProducto, $cantidad]);
+                    $idProd = $pdo->lastInsertId();
+
+                    $stmt = $pdo->prepare("INSERT INTO listapresupuesto 
+                (Productos_idProductos, descripcion, marca, costoSubTotal, idPresupuesto, cantidad)
                 VALUES (?, ?, ?, ?, ?, ?, ?)");
-                $subtotal = $merc['costo_mercaderia'] * $cantidad;
-                $stmt->execute([$idProd, $merc['nombre_mercaderia'], $merc['marca'], '', $subtotal, $idPresupuesto, $cantidad]);
+                    $subtotal = $merc['costo_mercaderia'] * $cantidad;
+                    $stmt->execute([$idProd, $merc['nombre_mercaderia'], $merc['marca'], '', $subtotal, $idPresupuesto, $cantidad]);
+                }
             }
 
+            // Servicios (no se combinan)
             foreach ($serviciosSeleccionados as $idServicio) {
                 if (!isset($servicios[$idServicio])) {
                     $pdo->rollBack();
@@ -435,29 +463,26 @@ class ModeloCarrito
 
                 $serv = $servicios[$idServicio];
 
-                // Insert en tabla productos
                 $stmt = $pdo->prepare("INSERT INTO productos (Servicio_idServicio, cantidad_productos, estado_servicio) VALUES (?, ?, 1)");
                 $stmt->execute([$idServicio, 1]);
                 $idProd = $pdo->lastInsertId();
 
-                // Insert en lista de presupuesto
                 $stmt = $pdo->prepare("INSERT INTO listapresupuesto 
-                (Productos_idProductos, descripcion, marca, modelo, costoSubTotal, idPresupuesto, cantidad)
-                VALUES (?, ?, ?, ?, ?, ?, ?)");
+            (Productos_idProductos, descripcion, marca, costoSubTotal, idPresupuesto, cantidad)
+            VALUES (?, ?, ?, ?, ?, ?, ?)");
                 $stmt->execute([$idProd, $serv['nombre_servicio'], '', '', $serv['costo_servicio'], $idPresupuesto, 1]);
             }
 
-            // 4️⃣ Recalcular total **una sola vez**
-            $this->actualizarTotalPresupuesto($idPresupuesto);
-
+            // 4️⃣ Recalcular total
             $pdo->commit();
-
+            $this->actualizarTotalPresupuesto($idPresupuesto);
             return ['ok' => true];
         } catch (Exception $e) {
             $pdo->rollBack();
             return ['error' => 'Error al guardar ítems: ' . $e->getMessage()];
         }
     }
+
 
 
 
@@ -477,93 +502,66 @@ class ModeloCarrito
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function actualizarItemEnPresupuesto($idItem, $idPresupuesto, $idProductoSeleccionado, $idServicioSeleccionado, $cantidad)
-    {
-        try {
-            $pdo = Conexion::conectar();
+public function actualizarItemEnPresupuesto($idItem, $idPresupuesto, $idProductoSeleccionado, $idServicioSeleccionado, $cantidad)
+{
+    try {
+        $pdo = Conexion::conectar();
 
-            // Obtener el producto actual
-            $stmt = $pdo->prepare("SELECT Productos_idProductos FROM listapresupuesto WHERE idListaPresupuesto = ?");
-            $stmt->execute([$idItem]);
-            $idProductoActual = $stmt->fetchColumn();
+        $descripcion = '';
+        $marca = '';
+        $subtotal = 0;
 
-            if (!$idProductoActual) {
-                return ['error' => 'Ítem no encontrado para actualizar'];
+        if ($idProductoSeleccionado) {
+            // ✅ Buscar producto
+            $stmt = $pdo->prepare("SELECT nombre_mercaderia, marca, costo_mercaderia FROM mercaderia WHERE idMercaderia = ?");
+            $stmt->execute([$idProductoSeleccionado]);
+            $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$producto) {
+                return ['error' => 'Producto no encontrado'];
             }
 
-            // Obtener datos actuales del producto
-            $stmt = $pdo->prepare("SELECT * FROM productos WHERE idProductos = ?");
-            $stmt->execute([$idProductoActual]);
-            $productoActual = $stmt->fetch(PDO::FETCH_ASSOC);
+            $descripcion = $producto['nombre_mercaderia'];
+            $marca = $producto['marca'];
+            $subtotal = $producto['costo_mercaderia'] * $cantidad;
 
-            $nuevoMercaderiaId = null;
-            $nuevoServicioId = null;
-            $estadoServicio = null;
+        } elseif ($idServicioSeleccionado) {
+            // ✅ Buscar servicio
+            $stmt = $pdo->prepare("SELECT nombre_servicio, costo_servicio FROM servicio WHERE idServicio = ?");
+            $stmt->execute([$idServicioSeleccionado]);
+            $servicio = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($idProductoSeleccionado) {
-                $nuevoMercaderiaId = $idProductoSeleccionado;
-                $estadoServicio = null;
-            } elseif ($idServicioSeleccionado) {
-                $nuevoServicioId = $idServicioSeleccionado;
-                $estadoServicio = 1;
+            if (!$servicio) {
+                return ['error' => 'Servicio no encontrado'];
             }
 
-            // Actualizar producto
-            $stmt = $pdo->prepare("
-            UPDATE productos SET 
-                Mercaderia_idMercaderia = :mercaderia,
-                Servicio_idServicio = :servicio,
-                cantidad_productos = :cantidad,
-                estado_servicio = :estado
-            WHERE idProductos = :id
-        ");
-            $stmt->bindParam(':mercaderia', $nuevoMercaderiaId);
-            $stmt->bindParam(':servicio', $nuevoServicioId);
-            $stmt->bindParam(':cantidad', $cantidad);
-            $stmt->bindParam(':estado', $estadoServicio);
-            $stmt->bindParam(':id', $idProductoActual);
+            $descripcion = $servicio['nombre_servicio'];
+            $marca = ''; // servicios no tienen marca
+            $subtotal = $servicio['costo_servicio'] * $cantidad;
+        } else {
+            return ['error' => 'Debe seleccionar un producto o servicio'];
+        }
 
-            if (!$stmt->execute()) {
-                return ['error' => 'Error al actualizar producto/servicio'];
-            }
-
-            // Calcular nuevos datos para listapresupuesto
-            if ($nuevoMercaderiaId) {
-                $stmt = $pdo->prepare("SELECT nombre_mercaderia, marca, costo_mercaderia FROM mercaderia WHERE idMercaderia = ?");
-                $stmt->execute([$nuevoMercaderiaId]);
-                $datos = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                $descripcion = $datos['nombre_mercaderia'];
-                $marca = $datos['marca'];
-                $modelo = '';
-                $subtotal = $datos['costo_mercaderia'] * $cantidad;
-            } else {
-                $stmt = $pdo->prepare("SELECT nombre_servicio, costo_servicio FROM servicio WHERE idServicio = ?");
-                $stmt->execute([$nuevoServicioId]);
-                $datos = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                $descripcion = $datos['nombre_servicio'];
-                $marca = '';
-                $modelo = '';
-                $subtotal = $datos['costo_servicio'] * $cantidad;
-            }
-
-            // Actualizar listapresupuesto
-            $stmt = $pdo->prepare("
-            UPDATE listapresupuesto 
-            SET descripcion = ?, marca = ?, modelo = ?, costoSubTotal = ?, cantidad = ? 
+        // ✅ Actualizar listapresupuesto (solo campos válidos)
+        $stmt = $pdo->prepare("
+            UPDATE listapresupuesto
+            SET descripcion = ?, marca = ?, costoSubTotal = ?, cantidad = ?
             WHERE idListaPresupuesto = ?
         ");
-            $stmt->execute([$descripcion, $marca, $modelo, $subtotal, $cantidad, $idItem]);
+        $stmt->execute([$descripcion, $marca, $subtotal, $cantidad, $idItem]);
 
-            // Actualizar total del presupuesto
-            $this->actualizarTotalPresupuesto($idPresupuesto);
+        // ✅ Actualizar total del presupuesto
+        $this->actualizarTotalPresupuesto($idPresupuesto);
 
-            return ['ok' => true];
-        } catch (Exception $e) {
-            return ['error' => 'Error inesperado: ' . $e->getMessage()];
-        }
+        return ['ok' => true];
+    } catch (Exception $e) {
+        return ['error' => 'Error inesperado: ' . $e->getMessage()];
     }
+}
+
+
+
+
 
     public function eliminarItemDelPresupuesto($idListaPresupuesto)
     {
@@ -714,6 +712,32 @@ class ModeloCarrito
         }
     }
 
-  
+
+    // ===================================== TECNICO ===============================================
+
+      public function obtenerTareasTecnico()
+    {
+        $pdo = Conexion::conectar();
+        $stmt = $pdo->prepare("
+        SELECT p.idPresupuesto, c.nombre_cliente, pr.idProductos, pr.estado_servicio,
+               lp.descripcion, lp.marca, lp.cantidad
+        FROM productos pr
+        INNER JOIN listapresupuesto lp ON lp.Productos_idProductos = pr.idProductos
+        INNER JOIN presupuesto p ON lp.idPresupuesto = p.idPresupuesto
+        INNER JOIN clientes c ON p.Cliente_idCliente = c.idCliente
+        WHERE pr.Servicio_idServicio IS NOT NULL
+        ORDER BY p.fechaEmision DESC
+    ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    public function actualizarEstadoServicio($idProducto, $estado)
+    {
+        $pdo = Conexion::conectar();
+        $stmt = $pdo->prepare("UPDATE productos SET estado_servicio = ? WHERE idProductos = ?");
+        return $stmt->execute([$estado, $idProducto]);
+    }
 
 }

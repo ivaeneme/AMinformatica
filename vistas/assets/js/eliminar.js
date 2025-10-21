@@ -99,4 +99,28 @@ $(document).ready(function() {
   });
 });
 
+$(document).on("click", ".btnEliminarItem", function (e) {
+  e.preventDefault();
+
+  let idListaPresupuesto = $(this).attr("idListaPresupuesto");
+  let idPresupuesto = $(this).attr("idPresupuesto"); // opcional, si querés volver al detalle
+
+  Swal.fire({
+    title: "¿Está seguro de eliminar este ítem del presupuesto?",
+    text: "Esta acción no se puede deshacer.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    cancelButtonText: "Cancelar",
+    confirmButtonText: "Sí, eliminar ítem",
+  }).then(function (result) {
+    if (result.isConfirmed) {
+      // Redirige al controlador que elimina el ítem
+      window.location = `index.php?controlador=carrito&accion=eliminarItem&idListaPresupuesto=${idListaPresupuesto}&idPresupuesto=${idPresupuesto}`;
+      
+    }
+  });
+});
+
 

@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 
 // Requiere todos los archivos necesarios

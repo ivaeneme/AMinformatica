@@ -2,13 +2,20 @@
 function estadoTexto($estado)
 {
     switch ($estado) {
-        case 1: return '<span class="badge bg-light text-dark">Creado</span>';
-        case 2: return '<span class="badge bg-primary">Aprobado</span>';
-        case 3: return '<span class="badge bg-warning text-dark">En proceso</span>';
-        case 4: return '<span class="badge bg-success">Terminado</span>';
-        case 5: return '<span class="badge bg-secondary">Entregado</span>';
-        case 6: return '<span class="badge bg-danger">Cancelado</span>';
-        default: return '<span class="badge bg-dark">Desconocido</span>';
+        case 1:
+            return '<span class="badge bg-light text-dark">Creado</span>';
+        case 2:
+            return '<span class="badge bg-primary">Aprobado</span>';
+        case 3:
+            return '<span class="badge bg-warning text-dark">En proceso</span>';
+        case 4:
+            return '<span class="badge bg-success">Terminado</span>';
+        case 5:
+            return '<span class="badge bg-secondary">Entregado</span>';
+        case 6:
+            return '<span class="badge bg-danger">Cancelado</span>';
+        default:
+            return '<span class="badge bg-dark">Desconocido</span>';
     }
 }
 ?>
@@ -61,25 +68,24 @@ function estadoTexto($estado)
                 <div class="accordion-item mb-3">
                     <h2 class="accordion-header" id="heading_<?= $id ?>">
                         <button class="accordion-button collapsed" type="button"
-                                data-bs-toggle="collapse"
-                                data-bs-target="#<?= $collapseId ?>"
-                                aria-expanded="false"
-                                aria-controls="<?= $collapseId ?>">
+                            data-bs-toggle="collapse"
+                            data-bs-target="#<?= $collapseId ?>"
+                            aria-expanded="false"
+                            aria-controls="<?= $collapseId ?>">
                             <strong>Presupuesto N°<?= $id ?></strong>
-                            &nbsp;| Fecha: <?= $info['fecha'] ?> 
-                            &nbsp;| Total: $<?= number_format($info['total'], 2, ',', '.') ?> 
+                            &nbsp;| Fecha: <?= $info['fecha'] ?>
+                            &nbsp;| Total: <span class="text-primary fw-bold">$<?= number_format($info['total'], 2, ',', '.') ?></span>
                             &nbsp;| Estado: <?= estadoTexto($info['estado']) ?>
                         </button>
                     </h2>
                     <div id="<?= $collapseId ?>" class="accordion-collapse collapse"
-                         aria-labelledby="heading_<?= $id ?>" data-bs-parent="#accordionPresupuestos">
+                        aria-labelledby="heading_<?= $id ?>" data-bs-parent="#accordionPresupuestos">
                         <div class="accordion-body">
                             <table class="table table-sm table-bordered align-middle text-center">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Descripción</th>
                                         <th>Marca</th>
-                                        <th>Modelo</th>
                                         <th>Cantidad</th>
                                         <th>Subtotal</th>
                                     </tr>
@@ -89,7 +95,6 @@ function estadoTexto($estado)
                                         <tr>
                                             <td><?= htmlspecialchars($item['descripcion']) ?></td>
                                             <td><?= htmlspecialchars($item['marca']) ?></td>
-                                            <td><?= htmlspecialchars($item['modelo']) ?></td>
                                             <td><?= $item['cantidad'] ?></td>
                                             <td>$<?= number_format($item['costoSubTotal'], 2, ',', '.') ?></td>
                                         </tr>

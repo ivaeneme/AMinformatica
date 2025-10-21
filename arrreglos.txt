@@ -9,8 +9,7 @@ En rol Admin/Vendedor revisar:
     //-verificar si hay un control de correos duplicados
     //-El estado "entregado" que sea la misma condicion que "terminado"
     //-CUANDO EL SE CANCELA DESDE CREADO, NO DEBERIA AUMENTAR STOCK
-    -Revisar el control de stock en "guardar item" en el controlador. Si el presupuesto es cancelado, el stock debe volver al punto inicial.
+    //Editar un item, la cantidad por subtotal no coincide con el costoTotal
 Arreglar el recuperar contraseña en el login (DEJARLO A LO ULTIMO)
 Chequear el tema del rol del tecnico, si un presupuesto con servicio se cancela que deberia pasar en el servicios_pendientes
-Revisar la eliminacion en cascada de tabla productos
-https://1337x.to/
+agregar_item.php agregar la columna de costo a la mercaderia

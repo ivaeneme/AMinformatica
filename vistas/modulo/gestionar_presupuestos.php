@@ -93,6 +93,7 @@ function estadoTextoBadge(int $estado): string
     <?php if (empty($presupuestos)): ?>
         <p>No hay presupuestos registrados.</p>
     <?php else: ?>
+        
 
         <?php
         $itemsAgrupados = [];
@@ -131,7 +132,7 @@ function estadoTextoBadge(int $estado): string
                         <strong>Presupuesto N°<?= htmlspecialchars($id) ?></strong> |
                         Cliente: <?= htmlspecialchars($grupo['cliente']) ?> |
                         Fecha: <?= htmlspecialchars($grupo['fecha']) ?> |
-                        Total: $<?= number_format($grupo['total'], 2, ',', '.') ?>
+                        <span class="text-primary fw-bold">Total: $<?= number_format($grupo['total'], 2, ',', '.') ?></span>
                     </div>
                     <div class="d-flex align-items-center">
                         <?= estadoTextoBadge($grupo['estado']) ?>
@@ -169,7 +170,6 @@ function estadoTextoBadge(int $estado): string
                             <tr>
                                 <th>Descripción</th>
                                 <th>Marca</th>
-                                <th>Modelo</th>
                                 <th>Cantidad</th>
                                 <th>Subtotal</th>
                                 <th>Estado Servicio</th>
@@ -179,8 +179,8 @@ function estadoTextoBadge(int $estado): string
                             <?php foreach ($grupo['items'] as $item): ?>
                                 <tr>
                                     <td><?= htmlspecialchars($item['descripcion']) ?></td>
-                                    <td><?= htmlspecialchars($item['marca']) ?></td>
-                                    <td><?= htmlspecialchars($item['modelo']) ?></td>
+                                    <td><?= htmlspecialchars($item['marca'] ?? '') ?></td>
+
                                     <td class="text-center"><?= (int)$item['cantidad'] ?></td>
                                     <td class="text-end">$<?= number_format($item['costoSubTotal'], 2, ',', '.') ?></td>
                                     <td class="text-center">
@@ -202,9 +202,13 @@ function estadoTextoBadge(int $estado): string
                             <!-- Fila extra con el botón Ver Detalle -->
                             <tr>
                                 <td colspan="6" class="text-end">
-                                    <a href="index.php?controlador=carrito&accion=detalle&id=<?= htmlspecialchars($id) ?>" class="btn btn-sm btn-info" aria-label="Ver detalle del presupuesto <?= htmlspecialchars($id) ?>">
-                                        Modificar
-                                    </a>
+                                    <?php if ($grupo['estado'] == 1): ?>
+                                        <a href="index.php?controlador=carrito&accion=detalle&id=<?= htmlspecialchars($id) ?>"
+                                            class="btn btn-sm btn-info"
+                                            aria-label="Modificar presupuesto <?= htmlspecialchars($id) ?>">
+                                            Modificar
+                                        </a>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         </tbody>
@@ -214,5 +218,7 @@ function estadoTextoBadge(int $estado): string
             </div>
         <?php endforeach; ?>
 
+
     <?php endif; ?>
+    
 </div>
