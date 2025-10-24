@@ -13,3 +13,5 @@ En rol Admin/Vendedor revisar:
 Arreglar el recuperar contraseña en el login (DEJARLO A LO ULTIMO)
 Chequear el tema del rol del tecnico, si un presupuesto con servicio se cancela que deberia pasar en el servicios_pendientes
 agregar_item.php agregar la columna de costo a la mercaderia
+istx xkmc lgxz nfai
+7e7914331f4ac7a338b4db0ee5bda432 api token

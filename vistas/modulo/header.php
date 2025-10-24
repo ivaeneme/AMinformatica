@@ -40,6 +40,9 @@
                                 }
                             }
                             ?>
+                            <a href="<?php echo $url; ?>cambiarcontrasena" class="dropdown-item notify-item">
+                                <span>Cambiar contraseña <i class="fa-solid fa-square-pen"></i></span>
+                            </a>
                             <a href="<?php echo $url; ?>salir" class="dropdown-item notify-item">
                                 <span>Salir <i class="fa-solid fa-right-from-bracket"></i></span>
                             </a>

@@ -24,7 +24,7 @@
                                         <label class="form-label">Contraseña</label>
                                         <input class="form-control form-control-lg" type="password" name="contrasena" placeholder="Ingresa tu contraseña" />
                                         <small>
-                                            <a href="recuperarcontraseña.php">¿Te olvidaste la contraseña?</a>
+                                            <a href="index.php?pagina=recuperarcontrasena">¿Te olvidaste la contraseña?</a>
                                         </small>
                                     </div>
                                     <div>
@@ -53,5 +53,3 @@
         </div>
     </div>
 </main>
-
-<script src="js/app.js"></script>

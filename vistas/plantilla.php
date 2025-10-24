@@ -124,16 +124,11 @@ $url = ControladorPlantilla::url();
 
                 $rutas = explode('/', $_GET["pagina"]);
 
-                //echo "<pre>";
-                //print_r($rutas);
-                //echo "</pre>";
-
                 // Validar si se está enviando el formulario de registro de clientes
                 if ($_SERVER["REQUEST_METHOD"] === "POST" && $rutas[0] === "registro_clientes") {
                     ControladorClientes::ctrCrearClientes();
                 }
                 if (
-                    // $rutas[0] == "index" ||
                     $rutas[0] == "productos" ||
                     $rutas[0] == "agregar_productos" ||
                     $rutas[0] == "editar_productos" ||
@@ -155,8 +150,10 @@ $url = ControladorPlantilla::url();
                     $rutas[0] == "vercarrito" ||
                     $rutas[0] == "servicios_pendientes" ||
                     $rutas[0] == "ver_factura" ||
-                    $rutas[0] == "recuperarcontraseña"
-
+                    $rutas[0] == "recuperarcontrasena" ||
+                    $rutas[0] == "verificar_codigo" ||
+                    $rutas[0] == "resetcontrasena_sms"||
+                    $rutas[0] == "cambiarcontrasena"
 
                 ) {
 

@@ -1,9 +1,11 @@
 <?php
+
 class ControladorCarrito
 {
 
     public function agregar()
     {
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: index.php?controlador=carrito&accion=ver');
             exit;

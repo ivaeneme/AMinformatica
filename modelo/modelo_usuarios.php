@@ -4,6 +4,61 @@ require_once 'conexion.php';
 
 class ModeloUsuarios
 {
+
+    public static function mdlGenerarTokenSMS($telefono)
+    {
+        try {
+            $conexion = Conexion::conectar();
+            $stmt = $conexion->prepare("SELECT id_usuario FROM usuarios WHERE telefono = ?");
+            $stmt->execute([$telefono]);
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$usuario) return false;
+
+            $token = rand(100000, 999999);
+            $expira = date("Y-m-d H:i:s", strtotime("+10 minutes"));
+
+            $stmt = $conexion->prepare("UPDATE usuarios SET token_sms = ?, token_sms_expira = ? WHERE id_usuario = ?");
+            $stmt->execute([$token, $expira, $usuario["id_usuario"]]);
+
+            return ["id_usuario" => $usuario["id_usuario"], "token" => $token];
+        } catch (PDOException $e) {
+            error_log("Error en mdlGenerarTokenSMS: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public static function mdlVerificarTokenSMS($telefono, $codigo)
+    {
+        try {
+            $conexion = Conexion::conectar();
+            $stmt = $conexion->prepare("
+            SELECT * FROM usuarios 
+            WHERE telefono = ? 
+            AND token_sms = ? 
+            AND token_sms_expira > NOW()
+        ");
+            $stmt->execute([$telefono, $codigo]);
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($usuario) {
+                // Limpia el token una vez usado
+                $stmt = $conexion->prepare("
+                UPDATE usuarios 
+                SET token_sms = NULL, token_sms_expira = NULL 
+                WHERE id_usuario = ?
+            ");
+                $stmt->execute([$usuario['id_usuario']]);
+                return $usuario;
+            }
+            return false;
+        } catch (PDOException $e) {
+            error_log("Error en mdlVerificarTokenSMS: " . $e->getMessage());
+            return false;
+        }
+    }
+
+
     static public function mdlActualizarContrasena($idUsuario, $nuevaContrasena)
     {
         $stmt = Conexion::conectar()->prepare("UPDATE usuarios SET contrasena = :contrasena WHERE id_usuario = :id");
@@ -11,6 +66,41 @@ class ModeloUsuarios
         $stmt->bindParam(":id", $idUsuario, PDO::PARAM_INT);
         $stmt->execute();
     }
+
+    public static function mdlRecuperarContrasena($correo)
+    {
+        try {
+            $conexion = Conexion::conectar();
+
+            // Verificar si el correo existe
+            $stmt = $conexion->prepare("SELECT id_usuario FROM usuarios WHERE email = ?");
+            $stmt->execute([$correo]);
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$usuario) {
+                return false; // No existe el correo
+            }
+
+            // Generar un token seguro
+            $token = bin2hex(random_bytes(32));
+            $fechaExpiracion = date("Y-m-d H:i:s", strtotime("+1 hour"));
+
+            // Guardar token en la base
+            $stmt = $conexion->prepare("UPDATE usuarios SET token_recuperacion = ?, token_expira = ? WHERE email = ?");
+            $stmt->execute([$token, $fechaExpiracion, $correo]);
+
+            // Retornar datos útiles
+            return [
+                "id_usuario" => $usuario["id_usuario"],
+                "token" => $token,
+                "correo" => $correo
+            ];
+        } catch (PDOException $e) {
+            error_log("Error en mdlRecuperarContrasena: " . $e->getMessage());
+            return false;
+        }
+    }
+
     static public function mdlMostrarUsuarios($item, $valor)
     {
         if ($item != null) {

@@ -1,4 +1,5 @@
 <?php
+require_once "utils/twilio_sms.php";
 
 class ControladorUsuarios
 {
@@ -32,9 +33,9 @@ INGRESO DE USUARIO
                             $_SESSION["id_cliente"] = $idCliente;
                         } else {
                             echo "<script>
-            alert('Error al asociar cliente. Contacte al administrador.');
-            window.location.href = 'index.php';
-        </script>";
+                                alert('Error al asociar cliente. Contacte al administrador.');
+                                window.location.href = 'index.php';
+                            </script>";
                             exit;
                         }
                     }
@@ -51,7 +52,128 @@ INGRESO DE USUARIO
         }
     }
 
+    public function recuperarContrasena()
+    {
 
+        if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["telefono"])) {
+            $telefono = trim($_POST["telefono"]);
+            $resultado = ModeloUsuarios::mdlGenerarTokenSMS($telefono);
+
+            if ($resultado) {
+                $sms = new TwilioSMS();
+                $sms->enviarCodigo($telefono, $resultado["token"]);
+
+                echo "<script>
+                alert('Se envió un código de recuperación a tu número $telefono');
+                window.location = 'index.php?pagina=verificar_codigo';
+              </script>";
+            } else {
+                echo "<script>
+                alert('El número no está registrado.');
+                window.location = 'index.php?pagina=recuperarcontrasena';
+              </script>";
+            }
+        } else {
+            include "vistas/modulo/recuperarcontrasena.php";
+        }
+    }
+
+
+
+    public function verificarCodigoSMS()
+    {
+        require_once "modelo/modelo_usuarios.php";
+
+        if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["telefono"]) && isset($_POST["codigo"])) {
+            $telefono = trim($_POST["telefono"]);
+            $codigo = trim($_POST["codigo"]);
+
+            $usuario = ModeloUsuarios::mdlVerificarTokenSMS($telefono, $codigo);
+
+            if ($usuario) {
+                // Código correcto → mostrar formulario para nueva contraseña
+                include "vistas/modulo/resetcontrasena_sms.php";
+            } else {
+                echo "<script>
+                alert('El código ingresado no es válido o expiró.');
+                window.location = 'index.php?pagina=verificar_codigo';
+            </script>";
+            }
+        } else {
+            include "vistas/modulo/verificar_codigo.php";
+        }
+    }
+
+
+
+    public function actualizarContrasenaSMS()
+    {
+        require_once "modelo/modelo_usuarios.php";
+
+        if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["telefono"])) {
+            $telefono = $_POST["telefono"];
+            $nueva = password_hash($_POST["nueva"], PASSWORD_DEFAULT);
+
+            $conexion = Conexion::conectar();
+            $stmt = $conexion->prepare("UPDATE usuarios SET contrasena = ? WHERE telefono = ?");
+            $stmt->execute([$nueva, $telefono]);
+
+            echo "<script>
+            alert('Contraseña actualizada correctamente.');
+            window.location = 'index.php?pagina=login';
+        </script>";
+        }
+    }
+
+    public function cambiarContrasena()
+    {
+        // Si el formulario fue enviado
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $idUsuario = $_SESSION['id_usuario'] ?? null;
+            $actual = $_POST['contrasena_actual'] ?? '';
+            $nueva = $_POST['nueva_contrasena'] ?? '';
+            $confirmar = $_POST['confirmar_contrasena'] ?? '';
+
+            if (!$idUsuario) {
+                echo "<script>
+                alert('Debes iniciar sesión para cambiar la contraseña.');
+                window.location = 'index.php?pagina=login';
+            </script>";
+                exit;
+            }
+
+            // Validar que las contraseñas coincidan
+            if ($nueva !== $confirmar) {
+                echo "<script>
+                alert('Las contraseñas no coinciden.');
+                window.location = 'index.php?pagina=cambiarcontrasena';
+            </script>";
+                exit;
+            }
+
+            // Obtener contraseña actual
+            $usuario = ModeloUsuarios::mdlMostrarUsuarios("id_usuario", $idUsuario);
+
+            if (!$usuario || !password_verify($actual, $usuario['contrasena'])) {
+                echo "<script>
+                alert('La contraseña actual es incorrecta.');
+                window.location = 'index.php?pagina=cambiarcontrasena';
+            </script>";
+                exit;
+            }
+
+            // Encriptar y actualizar
+            $hash = password_hash($nueva, PASSWORD_DEFAULT);
+            ModeloUsuarios::mdlActualizarContrasena($idUsuario, $hash);
+
+            echo "<script>
+            alert('Contraseña actualizada correctamente.');
+            window.location = 'index.php';
+        </script>";
+        } else {
+            include "vistas/modulo/cambiarcontrasena.php";
+        }
+    }
 
     static public function ctrMostrarUsuarios($item, $valor)
     {
