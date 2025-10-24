@@ -1,7 +1,8 @@
+
 <?php
 // Archivo: utils/twilio_sms.php
 
-require_once __DIR__ . 'vendor/twilio-php-main/src/Twilio/autoload.php';
+require_once __DIR__ . '/../vendor/twilio-php-main/src/Twilio/autoload.php';
 
 use Twilio\Rest\Client;
 
