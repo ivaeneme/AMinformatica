@@ -5,7 +5,7 @@
         </div>
         <div class="card-body">
             <form method="POST" action="index.php?controlador=usuarios&accion=agregarUsuarios">
-                
+
                 <!-- Nombre de usuario -->
                 <div class="mb-3">
                     <label for="nombre_usuario" class="form-label">Nombre de usuario</label>
@@ -16,6 +16,12 @@
                 <div class="mb-3">
                     <label for="email" class="form-label">Correo electrónico</label>
                     <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+
+                <!-- telefono -->
+                <div class="mb-3">
+                    <label for="telefono" class="form-label">Telefono</label>
+                    <input type="text" class="form-control" id="telefono" name="telefono" required>
                 </div>
 
                 <!-- Contraseña -->

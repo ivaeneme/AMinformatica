@@ -1,6 +1,6 @@
 <?php
  class ControladorPlantilla{
-   public function ctrMostrarPlantilla (){
+   static public function ctrMostrarPlantilla (){
         include 'vistas/plantilla.php';
     }
     static public function url(){

@@ -105,6 +105,7 @@ class ModeloServicios
             return "error";
         }
     }
+    
     public function obtenerPorId($id)
     {
         $pdo = Conexion::conectar();

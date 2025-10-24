@@ -113,7 +113,7 @@ class ControladorClientes
             if (ModeloUsuarios::correoExiste($conn, $correo)) {
                 echo "<script>
                     alert('Ya existe una cuenta con ese correo.');
-                    window.location.href = '../index.php';
+                    window.location.href = 'index.php';
                 </script>";
                 exit();
             }
@@ -122,11 +122,12 @@ class ControladorClientes
                 $conn->beginTransaction();
 
                 // 1. Crear usuario con rol cliente
-                $stmtUsuario = $conn->prepare("INSERT INTO usuarios (Rol_idRol, nombre_usuario, email, contrasena) VALUES (?, ?, ?, ?)");
+                $stmtUsuario = $conn->prepare("INSERT INTO usuarios (Rol_idRol, nombre_usuario, email, telefono, contrasena) VALUES (?, ?, ?, ?, ?)");
                 $stmtUsuario->execute([
                     2, // Rol cliente
                     $_POST["nombre_cliente"],
                     $correo,
+                    $_POST["telefono_cliente"],
                     password_hash(trim($_POST["contrasena"]), PASSWORD_DEFAULT)
                 ]);
 
@@ -149,7 +150,7 @@ class ControladorClientes
                     $conn->commit();
 
                     // 🔐 (Opcional) Iniciar sesión automáticamente
-                    session_start();
+                    
                     $_SESSION["iniciarSesion"] = "ok";
                     $_SESSION["id_usuario"] = $idUsuario;
                     $_SESSION["Rol_idRol"] = 2;
@@ -169,7 +170,7 @@ class ControladorClientes
                         "Cuenta creada con exito",
                         "' . ControladorPlantilla::url() . '"
                     );
-                    </script>';;
+                    </script>';
                     exit();
                 } else {
                     $conn->rollBack();

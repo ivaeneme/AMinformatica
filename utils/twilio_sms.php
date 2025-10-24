@@ -7,9 +7,9 @@ require_once __DIR__ . '/../vendor/twilio-php-main/src/Twilio/autoload.php';
 use Twilio\Rest\Client;
 
 class TwilioSMS {
-    private $sid = 'TU_ACCOUNT_SID';  // 🔹 reemplazá por el tuyo
-    private $token = 'TU_AUTH_TOKEN';  // 🔹 reemplazá por el tuyo
-    private $from = '+14155552671';    // 🔹 reemplazá por tu número Twilio
+    // private $sid = 'AC6ae2ed098005d3c5f4ef9493acd00440';  // 🔹 reemplazá por el tuyo
+    // private $token = 'a56eb3cf56143639ab67e575b0bf2d77';  // 🔹 reemplazá por el tuyo
+    // private $from = '+14155552671';    // 🔹 reemplazá por tu número Twilio
 
     public function enviarCodigo($numeroDestino, $codigo) {
         try {

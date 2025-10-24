@@ -193,6 +193,7 @@ INGRESO DE USUARIO
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nombre_usuario = trim($_POST['nombre_usuario']);
             $email = trim($_POST['email']);
+            $telefono= $_POST['telefono'];
             $contrasena = $_POST['contrasena'];
             $rol_id = $_POST['Rol_idRol'];
 
@@ -206,7 +207,7 @@ INGRESO DE USUARIO
                 }
 
                 $hash = password_hash($contrasena, PASSWORD_DEFAULT);
-                $nuevoId = ModeloUsuarios::mdlAgregarUsuario($nombre_usuario, $email, $hash, $rol_id);
+                $nuevoId = ModeloUsuarios::mdlAgregarUsuario($nombre_usuario, $email, $telefono, $hash, $rol_id);
 
                 if ($nuevoId) {
                     // ✅ Si es vendedor (rol 1)

@@ -162,17 +162,18 @@ class ModeloUsuarios
     }
 
 
-    public static function mdlAgregarUsuario($nombre_usuario, $email, $contrasena, $rol_id)
+    public static function mdlAgregarUsuario($nombre_usuario, $email, $telefono, $contrasena, $rol_id)
     {
         try {
             $conexion = Conexion::conectar();
             $stmt = $conexion->prepare("
-            INSERT INTO usuarios (nombre_usuario, email, contrasena, Rol_idRol)
-            VALUES (:nombre_usuario, :email, :contrasena, :rol_id)
+            INSERT INTO usuarios (nombre_usuario, email, telefono, contrasena, Rol_idRol)
+            VALUES (:nombre_usuario, :email,:telefono, :contrasena, :rol_id)
         ");
 
             $stmt->bindParam(':nombre_usuario', $nombre_usuario, PDO::PARAM_STR);
             $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+            $stmt->bindParam(':telefono', $telefono, PDO::PARAM_STR);
             $stmt->bindParam(':contrasena', $contrasena, PDO::PARAM_STR);
             $stmt->bindParam(':rol_id', $rol_id, PDO::PARAM_INT);
 

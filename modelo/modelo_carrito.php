@@ -10,17 +10,16 @@ class ModeloCarrito
         return $modeloProductos->obtenerPorId($id);
     }
 
-    public function verificarStockProducto($id, $cantidad)
-    {
-        $producto = $this->obtenerProductoPorId($id);
-        if (!$producto) return false;
-        return $producto['stock_mercaderia'] >= $cantidad;
-    }
-
     public function agregarProductoAlCarrito(&$carrito, $id, $cantidad)
     {
         $producto = $this->obtenerProductoPorId($id);
         if (!$producto) return ['error' => 'Producto no encontrado'];
+        // 🚫 Verificar límite total de 10 ítems
+        $totalActual = $this->contarTotalItems($carrito);
+        if ($totalActual + $cantidad > 10) {
+            return ['error' => 'No podés tener más de 10 ítems en el carrito.'];
+        }
+
 
         $clave = "producto_" . $id;
 
@@ -57,6 +56,11 @@ class ModeloCarrito
     {
         $servicio = $this->obtenerServicioPorId($id);
         if (!$servicio) return ['error' => 'Servicio no encontrado'];
+        // 🚫 Límite máximo de 10 ítems
+        $totalActual = $this->contarTotalItems($carrito);
+        if ($totalActual + 1 > 10) {
+            return ['error' => 'No podés tener más de 10 ítems en el carrito.'];
+        }
 
         $clave = "servicio_" . $id;
 
@@ -73,6 +77,15 @@ class ModeloCarrito
         }
 
         return ['ok' => true];
+    }
+
+    private function contarTotalItems($carrito)
+    {
+        $total = 0;
+        foreach ($carrito as $item) {
+            $total += $item['cantidad'];
+        }
+        return $total;
     }
 
 

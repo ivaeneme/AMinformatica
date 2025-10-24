@@ -26,8 +26,8 @@ $url = ControladorPlantilla::url();
             </div>
 
             <div class="mb-3">
-                <label for="telefono_cliente" class="form-label">Teléfono</label>
-                <input type="text" class="form-control" name="telefono_cliente" id="telefono_cliente" required>
+                <label for="telefono_cliente" class="form-label">Teléfono (+54)</label>
+                <input type="text" class="form-control" name="telefono_cliente" id="telefono_cliente" placeholder="ej: +543454222244" required>
             </div>
 
             <div class="mb-3">
