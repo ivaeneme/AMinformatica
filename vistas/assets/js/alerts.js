@@ -48,6 +48,55 @@ function fncSweetAlert(type, text, url) {
         });
       }
       break;
+    /*=============================================
+Cuando es una advertencia
+=============================================*/
+    case "warning":
+      if (url == null) {
+        Swal.fire({
+          icon: "warning",
+          title: "Atención",
+          text: text,
+          confirmButtonColor: "#f39c12", // Amarillo
+        });
+      } else {
+        Swal.fire({
+          icon: "warning",
+          title: "Atención",
+          text: text,
+          confirmButtonColor: "#f39c12",
+        }).then((result) => {
+          if (result.value) {
+            window.open(url, "_top");
+          }
+        });
+      }
+      break;
+    /*=============================================
+    Cuando es un mensaje informativo
+    =============================================*/
+    case "info":
+      if (url == null) {
+        Swal.fire({
+          icon: "info",
+          title: "Información",
+          text: text,
+          confirmButtonColor: "#3498db", // Azul
+        });
+      } else {
+        Swal.fire({
+          icon: "info",
+          title: "Información",
+          text: text,
+          confirmButtonColor: "#3498db",
+        }).then((result) => {
+          if (result.value) {
+            window.open(url, "_top");
+          }
+        });
+      }
+      break;
+
 
     case "loading":
       Swal.fire({

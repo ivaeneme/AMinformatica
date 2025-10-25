@@ -1,0 +1,15 @@
+{
+    "name": "usuar/aminformatica",
+    "autoload": {
+        "psr-4": {
+            "Usuar\\Aminformatica\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Ivan Martinez",
+            "email": "ivan.max.martinez94@gmail.com"
+        }
+    ],
+    "require": {}
+}

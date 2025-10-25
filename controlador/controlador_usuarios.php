@@ -54,76 +54,94 @@ INGRESO DE USUARIO
 
     public function recuperarContrasena()
     {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = trim($_POST['email']);
 
-        if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["telefono"])) {
-            $telefono = trim($_POST["telefono"]);
-            $resultado = ModeloUsuarios::mdlGenerarTokenSMS($telefono);
+            $usuario = ModeloUsuarios::mdlMostrarUsuarios('email', $email);
+            if (!$usuario) {
+                echo "<script>alert('El correo no está registrado.');</script>";
+                return;
+            }
 
-            if ($resultado) {
-                $sms = new TwilioSMS();
-                $sms->enviarCodigo($telefono, $resultado["token"]);
+            $token = rand(100000, 999999);
+            $expira = date("Y-m-d H:i:s", strtotime("+10 minutes"));
 
-                echo "<script>
-                alert('Se envió un código de recuperación a tu número $telefono');
-                window.location = 'index.php?pagina=verificar_codigo';
-              </script>";
+            ModeloUsuarios::mdlGuardarTokenCorreo($email, $token, $expira);
+
+
+            require_once "utils/correo_helper.php";
+            if (CorreoHelper::enviarTokenRecuperacion($email, $usuario['nombre_usuario'], $token)) {
+                echo '<script>fncSweetAlert("success", "Se ha enviado un correo con el código de recuperación.", "index.php?controlador=usuarios&accion=verificarToken");</script>';
             } else {
-                echo "<script>
-                alert('El número no está registrado.');
-                window.location = 'index.php?pagina=recuperarcontrasena';
-              </script>";
+                echo '<script>fncSweetAlert("error", "Error al enviar el correo. Intente más tarde.");</script>';
             }
         } else {
-            include "vistas/modulo/recuperarcontrasena.php";
+            include "vistas/modulo/recuperar_contrasena.php";
         }
     }
 
-
-
-    public function verificarCodigoSMS()
+    // ==========================================
+    // Paso 2: Verificar token
+    // ==========================================
+    public function verificarToken()
     {
-        require_once "modelo/modelo_usuarios.php";
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = trim($_POST['email']);
+            $token = trim($_POST['token']);
 
-        if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["telefono"]) && isset($_POST["codigo"])) {
-            $telefono = trim($_POST["telefono"]);
-            $codigo = trim($_POST["codigo"]);
+            $usuario = ModeloUsuarios::mdlMostrarUsuarios('email', $email);
 
-            $usuario = ModeloUsuarios::mdlVerificarTokenSMS($telefono, $codigo);
+            if (!$usuario) {
+                echo "<script>alert('Correo no encontrado.');</script>";
+                return;
+            }
 
-            if ($usuario) {
-                // Código correcto → mostrar formulario para nueva contraseña
-                include "vistas/modulo/resetcontrasena_sms.php";
+            // Validar token y expiración
+            if ($usuario['token_correo'] === $token && strtotime($usuario['token_correo_expira']) > time()) {
+                $_SESSION['recuperar_email'] = $email;
+                echo '<script>fncSweetAlert("success", "Código verificado correctamente.", "index.php?controlador=usuarios&accion=nuevaContrasena");</script>';
             } else {
-                echo "<script>
-                alert('El código ingresado no es válido o expiró.');
-                window.location = 'index.php?pagina=verificar_codigo';
-            </script>";
+                echo '<script>fncSweetAlert("error", "El código es incorrecto o ha expirado.");</script>';
             }
         } else {
-            include "vistas/modulo/verificar_codigo.php";
+            include "vistas/modulo/verificar_token.php";
         }
     }
 
 
-
-    public function actualizarContrasenaSMS()
+    // ==========================================
+    // Paso 3: Establecer nueva contraseña
+    // ==========================================
+    public function nuevaContrasena()
     {
-        require_once "modelo/modelo_usuarios.php";
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = $_SESSION['recuperar_email'] ?? null;
+            $nueva = $_POST['nueva_contrasena'] ?? '';
+            $confirmar = $_POST['confirmar_contrasena'] ?? '';
 
-        if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["telefono"])) {
-            $telefono = $_POST["telefono"];
-            $nueva = password_hash($_POST["nueva"], PASSWORD_DEFAULT);
+            if (!$email) {
+                echo '<script>fncSweetAlert("warning", "No hay un proceso de recuperación activo.", "index.php?controlador=usuarios&accion=recuperarContrasena");</script>';
+                return;
+            }
 
-            $conexion = Conexion::conectar();
-            $stmt = $conexion->prepare("UPDATE usuarios SET contrasena = ? WHERE telefono = ?");
-            $stmt->execute([$nueva, $telefono]);
+            if ($nueva !== $confirmar) {
+                echo '<script>fncSweetAlert("error", "Las contraseñas no coinciden.");</script>';                
+                return;
+            }
 
-            echo "<script>
-            alert('Contraseña actualizada correctamente.');
-            window.location = 'index.php?pagina=login';
-        </script>";
+            $hash = password_hash($nueva, PASSWORD_DEFAULT);
+            ModeloUsuarios::mdlActualizarContrasenaPorCorreo($email, $hash);
+
+            // Limpiar token
+            ModeloUsuarios::mdlGuardarTokenCorreo($email, null, null);
+            unset($_SESSION['recuperar_email']);
+
+             echo '<script>fncSweetAlert("success", "Contraseña actualizada correctamente. Ya puedes iniciar sesión.", "index.php?pagina=login");</script>';
+        } else {
+            include "vistas/modulo/resetcontraseña.php";
         }
     }
+
 
     public function cambiarContrasena()
     {

@@ -83,9 +83,22 @@ class ModeloCarrito
     {
         $total = 0;
         foreach ($carrito as $item) {
-            $total += $item['cantidad'];
+            $total += (int)$item['cantidad'];
         }
-        return $total;
+        return min($total, 10); // asegura que nunca supere 10
+    }
+
+    public function contarPresupuestosCreadosPorCliente($idCliente)
+    {
+        $pdo = Conexion::conectar();
+        $stmt = $pdo->prepare("
+        SELECT COUNT(*) 
+        FROM presupuesto 
+        WHERE Cliente_idCliente = ? 
+          AND estado_presupuesto = 1
+    ");
+        $stmt->execute([$idCliente]);
+        return (int) $stmt->fetchColumn();
     }
 
 

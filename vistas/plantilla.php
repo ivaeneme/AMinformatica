@@ -151,8 +151,8 @@ $url = ControladorPlantilla::url();
                     $rutas[0] == "servicios_pendientes" ||
                     $rutas[0] == "ver_factura" ||
                     $rutas[0] == "recuperarcontrasena" ||
-                    $rutas[0] == "verificar_codigo" ||
-                    $rutas[0] == "resetcontrasena_sms"||
+                    $rutas[0] == "verificar_token" ||
+                    $rutas[0] == "resetcontrasena"||
                     $rutas[0] == "cambiarcontrasena"
 
                 ) {

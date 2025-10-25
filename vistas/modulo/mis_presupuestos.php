@@ -23,6 +23,22 @@ function estadoTexto($estado)
 <div class="container mt-4">
     <h2>Mis presupuestos</h2>
 
+    <?php if (isset($presupuestosActivos)): ?>
+        <?php if ($presupuestosActivos >= 2): ?>
+            <div class="alert alert-warning text-center mt-3 shadow-sm">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <strong>Atención:</strong> Ya tiene <?= $presupuestosActivos ?> presupuestos en estado 
+                <b>“Creado”</b>. Debes esperar a que aprueben o cancelen alguno antes de generar uno nuevo.
+            </div>
+        <?php else: ?>
+            <div class="alert alert-info text-center mt-3 shadow-sm">
+                <i class="bi bi-info-circle-fill"></i>
+                Puede generar hasta <b><?= 2 - $presupuestosActivos ?></b> presupuesto(s) más en estado “Creado”.
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
+
+
     <!-- Filtro por estado -->
     <form method="GET" class="mb-3 d-flex align-items-center gap-2">
         <input type="hidden" name="controlador" value="carrito">
