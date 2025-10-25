@@ -24,7 +24,7 @@ class CorreoHelper
         );
 
         // ⚙️ Clave de API (desde tu panel de SendGrid)
-        $apiKey = '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';
+        // $apiKey = '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';
         $sendgrid = new \SendGrid($apiKey);
 
         try {

@@ -18,4 +18,3 @@ istx xkmc lgxz nfai
     private $sid = 'AC6ae2ed098005d3c5f4ef9493acd00440';  // 🔹 reemplazá por el tuyo
     private $token = 'a56eb3cf56143639ab67e575b0bf2d77';
 
-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 sendgrid api key
