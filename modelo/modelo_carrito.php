@@ -473,10 +473,10 @@ class ModeloCarrito
                     $idProd = $pdo->lastInsertId();
 
                     $stmt = $pdo->prepare("INSERT INTO listapresupuesto 
-                (Productos_idProductos, descripcion, marca, costoSubTotal, idPresupuesto, cantidad)
-                VALUES (?, ?, ?, ?, ?, ?, ?)");
+                    (Productos_idProductos, descripcion, marca, costoSubTotal, idPresupuesto, cantidad)
+                    VALUES (?, ?, ?, ?, ?, ?)");
                     $subtotal = $merc['costo_mercaderia'] * $cantidad;
-                    $stmt->execute([$idProd, $merc['nombre_mercaderia'], $merc['marca'], '', $subtotal, $idPresupuesto, $cantidad]);
+                    $stmt->execute([$idProd, $merc['nombre_mercaderia'], $merc['marca'], $subtotal, $idPresupuesto, $cantidad]);
                 }
             }
 
@@ -494,9 +494,9 @@ class ModeloCarrito
                 $idProd = $pdo->lastInsertId();
 
                 $stmt = $pdo->prepare("INSERT INTO listapresupuesto 
-            (Productos_idProductos, descripcion, marca, costoSubTotal, idPresupuesto, cantidad)
-            VALUES (?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$idProd, $serv['nombre_servicio'], '', '', $serv['costo_servicio'], $idPresupuesto, 1]);
+                (Productos_idProductos, descripcion, marca, costoSubTotal, idPresupuesto, cantidad)
+                VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$idProd, $serv['nombre_servicio'], '', $serv['costo_servicio'], $idPresupuesto, 1]);
             }
 
             // 4️⃣ Recalcular total
@@ -741,7 +741,7 @@ public function actualizarItemEnPresupuesto($idItem, $idPresupuesto, $idProducto
 
     // ===================================== TECNICO ===============================================
 
-      public function obtenerTareasTecnico()
+    public function obtenerTareasTecnico()
     {
         $pdo = Conexion::conectar();
         $stmt = $pdo->prepare("
@@ -752,12 +752,12 @@ public function actualizarItemEnPresupuesto($idItem, $idPresupuesto, $idProducto
         INNER JOIN presupuesto p ON lp.idPresupuesto = p.idPresupuesto
         INNER JOIN clientes c ON p.Cliente_idCliente = c.idCliente
         WHERE pr.Servicio_idServicio IS NOT NULL
+          AND p.estado_presupuesto IN (2,3)
         ORDER BY p.fechaEmision DESC
     ");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
 
     public function actualizarEstadoServicio($idProducto, $estado)
     {

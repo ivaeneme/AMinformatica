@@ -93,7 +93,7 @@ function estadoTextoBadge(int $estado): string
     <?php if (empty($presupuestos)): ?>
         <p>No hay presupuestos registrados.</p>
     <?php else: ?>
-        
+
 
         <?php
         $itemsAgrupados = [];
@@ -105,6 +105,7 @@ function estadoTextoBadge(int $estado): string
             $itemsAgrupados[$id]['total'] = $item['costoTotal'];
             $itemsAgrupados[$id]['estado'] = $item['estado_presupuesto'];
             $itemsAgrupados[$id]['items'][] = $item;
+            $tieneFactura = $facturasMap[$id] ?? null;
         }
 
         uasort($itemsAgrupados, fn($a, $b) => strtotime($b['fecha']) - strtotime($a['fecha']));
@@ -152,10 +153,14 @@ function estadoTextoBadge(int $estado): string
 
                         <?php if ($puedeBorrar): ?>
                             <a href="index.php?controlador=carrito&accion=borrar&id=<?= htmlspecialchars($id) ?>"
-                                onclick="return confirm('¿Confirma borrar este presupuesto?');"
-                                class="btn btn-sm btn-danger ms-3" aria-label="Borrar presupuesto <?= htmlspecialchars($id) ?>">
+                                onclick="event.preventDefault();
+            fncSweetAlert('confirm', '¿Confirma borrar este presupuesto?')
+              .then((ok) => { if (ok) window.location = this.href; });"
+                                class="btn btn-sm btn-danger ms-3"
+                                aria-label="Borrar presupuesto <?= htmlspecialchars($id) ?>">
                                 <i class="fas fa-trash"></i>
                             </a>
+
                         <?php endif; ?>
 
                         <button class="btn btn-sm btn-outline-secondary ms-3" data-bs-toggle="collapse" data-bs-target="#<?= htmlspecialchars($collapseId) ?>" aria-expanded="false" aria-controls="<?= htmlspecialchars($collapseId) ?>">
@@ -209,6 +214,22 @@ function estadoTextoBadge(int $estado): string
                                             Modificar
                                         </a>
                                     <?php endif; ?>
+                                    <?php if ($grupo['estado'] != 1): ?>
+                                        <?php
+                                        $idFactura = $modeloCarrito->obtenerIdFacturaPorPresupuesto($id);
+                                        ?>
+
+                                        <?php if (!$idFactura): ?>
+                                            <a href="index.php?controlador=factura&accion=generarFactura&id=<?= $id ?>" class="btn btn-success btn-sm">
+                                                Generar Factura
+                                            </a>
+                                        <?php else: ?>
+                                            <a href="index.php?controlador=factura&accion=ver&id=<?= $idFactura ?>" class="btn btn-info btn-sm">
+                                                Ver Factura
+                                            </a>
+                                        <?php endif; ?>
+
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         </tbody>
@@ -220,5 +241,5 @@ function estadoTextoBadge(int $estado): string
 
 
     <?php endif; ?>
-    
+
 </div>

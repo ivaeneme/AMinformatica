@@ -15,7 +15,10 @@ class ControladorCarrito
         $cantidad = isset($_POST['cantidad']) ? (int)$_POST['cantidad'] : 1;
 
         if ($cantidad <= 0) {
-            echo "<script>alert('La cantidad debe ser mayor a 0'); window.history.back();</script>";
+            echo "<script>
+                fncSweetAlert('warning', 'La cantidad debe ser mayor a 0', null);
+                window.history.back();
+            </script>";
             return;
         }
 
@@ -28,7 +31,10 @@ class ControladorCarrito
         }
 
         if ($totalItems >= 10) {
-            echo "<script>alert('No podés agregar más de 10 ítems en el carrito.'); window.history.back();</script>";
+            echo "<script>
+                fncSweetAlert('warning', 'No podés agregar más de 10 ítems en el carrito.', null);
+                window.history.back();
+            </script>";
             return;
         }
 
@@ -39,12 +45,19 @@ class ControladorCarrito
         } elseif ($tipo === 'servicio') {
             $resultado = $modeloCarrito->agregarServicioAlCarrito($_SESSION['carrito'], $_POST['id']);
         } else {
-            echo "<script>alert('Tipo inválido'); window.history.back();</script>";
+            echo "<script>
+                fncSweetAlert('error', 'Tipo inválido', null);
+                window.history.back();
+            </script>";
             return;
         }
 
         if (isset($resultado['error'])) {
-            echo "<script>alert('" . $resultado['error'] . "'); window.history.back();</script>";
+            $msg = addslashes($resultado['error']);
+            echo "<script>
+                fncSweetAlert('error', '{$msg}', null);
+                window.history.back();
+            </script>";
             return;
         }
 
@@ -63,7 +76,6 @@ class ControladorCarrito
 
     public function ver()
     {
-
         include 'vistas/modulo/vercarrito.php';
     }
 
@@ -73,9 +85,8 @@ class ControladorCarrito
         // ✅ Verificar login y contenido del carrito
         if (!isset($_SESSION['id_cliente']) || empty($_SESSION['carrito'])) {
             echo "<script>
-            alert('Debe estar logueado como cliente y tener productos en el carrito.');
-            window.location.href='index.php';
-        </script>";
+                fncSweetAlert('warning', 'Debe estar logueado como cliente y tener productos en el carrito.', 'index.php');
+            </script>";
             return;
         }
 
@@ -88,9 +99,8 @@ class ControladorCarrito
         $presupuestosActivos = $modeloCarrito->contarPresupuestosCreadosPorCliente($idCliente);
         if ($presupuestosActivos >= 2) {
             echo "<script>
-            alert('Ya tienes 2 presupuestos pendientes de aprobacion');
-            window.location.href='index.php?controlador=carrito&accion=historial';
-        </script>";
+                fncSweetAlert('warning', 'Ya tienes 2 presupuestos pendientes de aprobacion', 'index.php?controlador=carrito&accion=historial');
+            </script>";
             return;
         }
 
@@ -147,15 +157,14 @@ class ControladorCarrito
             unset($_SESSION['carrito']);
 
             echo "<script>
-            alert('Presupuesto generado correctamente.');
-            window.location.href='index.php';
-        </script>";
+                fncSweetAlert('success', 'Presupuesto generado correctamente.', 'index.php');
+            </script>";
         } catch (Exception $e) {
             $pdo->rollBack();
+            $msg = addslashes('Error al generar presupuesto: ' . $e->getMessage());
             echo "<script>
-            alert('Error al generar presupuesto: " . addslashes($e->getMessage()) . "');
-            window.location.href='index.php?controlador=carrito&accion=ver';
-        </script>";
+                fncSweetAlert('error', '{$msg}', 'index.php?controlador=carrito&accion=ver');
+            </script>";
         }
     }
 
@@ -167,7 +176,9 @@ class ControladorCarrito
         $idCliente = $_SESSION['id_cliente'] ?? null;
 
         if (!$idCliente) {
-            echo "<script>alert('Debe iniciar sesión como cliente.'); window.location.href='index.php';</script>";
+            echo "<script>
+                fncSweetAlert('warning', 'Debe iniciar sesión como cliente.', 'index.php');
+            </script>";
             return;
         }
 
@@ -175,7 +186,6 @@ class ControladorCarrito
         if ($estado === '') {
             $estado = null; // Si selecciona "Todos", no filtrar por estado
         }
-
 
         $modeloCarrito = new ModeloCarrito();
         $presupuestos = $modeloCarrito->obtenerHistorialPresupuestosCliente($idCliente, $estado);
@@ -189,7 +199,9 @@ class ControladorCarrito
     public function gestionar()
     {
         if (!isset($_SESSION["Rol_idRol"]) || !in_array($_SESSION["Rol_idRol"], [1, 4])) {
-            echo "<script>alert('Acceso restringido'); window.location.href='index.php';</script>";
+            echo "<script>
+                fncSweetAlert('warning', 'Acceso restringido', 'index.php');
+            </script>";
             return;
         }
 
@@ -204,6 +216,10 @@ class ControladorCarrito
         ];
 
         $presupuestos = $modeloCarrito->obtenerPresupuestosParaGestion($filtros);
+        $facturasMap = [];
+        foreach ($presupuestos as $p) {
+            $facturasMap[$p['idPresupuesto']] = $modeloCarrito->obtenerIdFacturaPorPresupuesto($p['idPresupuesto']);
+        }
 
         include 'vistas/modulo/gestionar_presupuestos.php';
     }
@@ -227,7 +243,9 @@ class ControladorCarrito
             // Obtener el estado actual del presupuesto
             $presupuesto = $modeloCarrito->obtenerPresupuestoPorId($idPresupuesto);
             if (!$presupuesto) {
-                echo "<script>alert('Presupuesto no encontrado'); window.location.href='index.php?controlador=carrito&accion=gestionar';</script>";
+                echo "<script>
+                    fncSweetAlert('error', 'Presupuesto no encontrado', 'index.php?controlador=carrito&accion=gestionar');
+                </script>";
                 return;
             }
 
@@ -245,9 +263,8 @@ class ControladorCarrito
 
             if (!in_array($nuevoEstado, $transicionesValidas[$estadoActual] ?? [])) {
                 echo "<script>
-                alert('Transición de estado no permitida.'); 
-                window.location.href='index.php?controlador=carrito&accion=gestionar';
-            </script>";
+                    fncSweetAlert('warning', 'Transición de estado no permitida.', 'index.php?controlador=carrito&accion=gestionar');
+                </script>";
                 return;
             }
 
@@ -257,12 +274,11 @@ class ControladorCarrito
                 foreach ($servicios as $servicio) {
                     if ((int)$servicio['estado_servicio'] !== 2) {
                         $mensaje = $nuevoEstado === 4
-                            ? 'No se puede marcar como "Terminado" hasta que todos los servicios estén terminados.'
-                            : 'No se puede marcar como "Entregado" hasta que todos los servicios estén terminados.';
+                            ? 'No se puede marcar como \"Terminado\" hasta que todos los servicios estén terminados.'
+                            : 'No se puede marcar como \"Entregado\" hasta que todos los servicios estén terminados.';
                         echo "<script>
-                        alert('$mensaje'); 
-                        window.location.href='index.php?controlador=carrito&accion=gestionar';
-                    </script>";
+                            fncSweetAlert('warning', '{$mensaje}', 'index.php?controlador=carrito&accion=gestionar');
+                        </script>";
                         return;
                     }
                 }
@@ -273,17 +289,15 @@ class ControladorCarrito
                 $productosSinStock = $modeloCarrito->descontarStockPorPresupuesto($idPresupuesto);
                 if ($productosSinStock === false) {
                     echo "<script>
-                    alert('Error al procesar stock.');
-                    window.location.href='index.php?controlador=carrito&accion=gestionar';
-                </script>";
+                        fncSweetAlert('error', 'Error al procesar stock.', 'index.php?controlador=carrito&accion=gestionar');
+                    </script>";
                     return;
                 }
                 if (!empty($productosSinStock)) {
-                    $lista = implode(", ", $productosSinStock);
+                    $lista = addslashes(implode(", ", $productosSinStock));
                     echo "<script>
-                    alert('No hay stock suficiente para: $lista. No se puede aprobar el presupuesto.');
-                    window.location.href='index.php?controlador=carrito&accion=gestionar';
-                </script>";
+                        fncSweetAlert('warning', 'No hay stock suficiente para: {$lista}. No se puede aprobar el presupuesto.', 'index.php?controlador=carrito&accion=gestionar');
+                    </script>";
                     return;
                 }
             }
@@ -293,25 +307,21 @@ class ControladorCarrito
                 $productosDevueltos = $modeloCarrito->devolverStockPorPresupuesto($idPresupuesto);
                 if ($productosDevueltos === false) {
                     echo "<script>
-                        alert('Error al devolver stock.');
-                        window.location.href='index.php?controlador=carrito&accion=gestionar';
+                        fncSweetAlert('error', 'Error al devolver stock.', 'index.php?controlador=carrito&accion=gestionar');
                     </script>";
                     return;
                 }
             }
 
-
             // Actualizar estado finalmente
             $modeloCarrito->actualizarEstadoPresupuesto($idPresupuesto, $nuevoEstado);
             echo "<script>
-            alert('Estado actualizado correctamente');
-            window.location.href='index.php?controlador=carrito&accion=gestionar';
-        </script>";
+                fncSweetAlert('success', 'Estado actualizado correctamente', 'index.php?controlador=carrito&accion=gestionar');
+            </script>";
         } else {
             echo "<script>
-            alert('Petición inválida');
-            window.location.href='index.php';
-        </script>";
+                fncSweetAlert('error', 'Petición inválida', 'index.php');
+            </script>";
         }
     }
 
@@ -329,7 +339,6 @@ class ControladorCarrito
 
         // 1. Presupuesto + Cliente
         $presupuesto = $modeloCarrito->obtenerPresupuestoConCliente($idPresupuesto);
-        // $modeloCarrito->actualizarTotalPresupuesto($idPresupuesto);
         if (!$presupuesto) {
             echo "<div class='alert alert-warning'>Presupuesto no encontrado.</div>";
             return;
@@ -348,7 +357,9 @@ class ControladorCarrito
     public function tareasTecnico()
     {
         if (!isset($_SESSION["Rol_idRol"]) || $_SESSION["Rol_idRol"] != 3) {
-            echo "<script>alert('Acceso restringido'); window.location.href='index.php';</script>";
+            echo "<script>
+                fncSweetAlert('warning', 'Acceso restringido', 'index.php');
+            </script>";
             return;
         }
 
@@ -372,9 +383,9 @@ class ControladorCarrito
             $modeloCarrito = new ModeloCarrito();
             $modeloCarrito->actualizarEstadoServicio($idProducto, $estado);
 
-            echo "<script>alert('Estado del servicio actualizado'); window.location.href='index.php?controlador=carrito&accion=tareasTecnico';</script>";
+            echo '<script>fncSweetAlert("success", "Estado del servicio actualizado.", "index.php?controlador=carrito&accion=tareasTecnico");</script>';
         } else {
-            echo "<script>alert('Petición inválida'); window.location.href='index.php';</script>";
+            echo '<script>fncSweetAlert("error", "Error al actualizar estado.", null);</script>';
         }
     }
 
@@ -382,12 +393,26 @@ class ControladorCarrito
     public function borrar()
     {
         if (!isset($_SESSION["Rol_idRol"]) || !in_array($_SESSION["Rol_idRol"], [1, 4])) {
-            echo "<script>alert('Acceso restringido'); window.location.href='index.php';</script>";
+            echo "<script>
+            if (typeof fncSweetAlert === 'function') {
+                fncSweetAlert('warning', 'Acceso restringido', 'index.php');
+            } else {
+                alert('Acceso restringido');
+                window.location.href = 'index.php';
+            }
+        </script>";
             return;
         }
 
         if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-            echo "<script>alert('ID inválido'); window.location.href='index.php?controlador=carrito&accion=gestionar';</script>";
+            echo "<script>
+            if (typeof fncSweetAlert === 'function') {
+                fncSweetAlert('error', 'ID inválido', 'index.php?controlador=carrito&accion=gestionar');
+            } else {
+                alert('ID inválido');
+                window.location.href = 'index.php?controlador=carrito&accion=gestionar';
+            }
+        </script>";
             return;
         }
 
@@ -397,24 +422,41 @@ class ControladorCarrito
         $resultado = $modeloCarrito->borrarPresupuestoSiPermitido($idPresupuesto);
 
         if (isset($resultado['error'])) {
-            echo "<script>alert('" . $resultado['error'] . "'); window.location.href='index.php?controlador=carrito&accion=gestionar';</script>";
+            $msg = addslashes($resultado['error']);
+            echo "<script>
+            if (typeof fncSweetAlert === 'function') {
+                fncSweetAlert('error', '{$msg}', 'index.php?controlador=carrito&accion=gestionar');
+            } else {
+                alert('{$msg}');
+                window.location.href = 'index.php?controlador=carrito&accion=gestionar';
+            }
+        </script>";
             return;
         }
 
-        echo "<script>alert('Presupuesto borrado correctamente'); window.location.href='index.php?controlador=carrito&accion=gestionar';</script>";
+        echo "<script>
+        if (typeof fncSweetAlert === 'function') {
+            fncSweetAlert('success', 'Presupuesto borrado correctamente', 'index.php?controlador=carrito&accion=gestionar');
+        } else {
+            alert('Presupuesto borrado correctamente');
+            window.location.href = 'index.php?controlador=carrito&accion=gestionar';
+        }
+    </script>";
     }
+
 
 
     public function verPresupuesto()
     {
-
         $this->detalle();
     }
 
     public function agregarItem()
     {
         if (!isset($_GET['idPresupuesto']) || !is_numeric($_GET['idPresupuesto'])) {
-            echo "<script>alert('ID de presupuesto inválido'); window.location.href='index.php';</script>";
+            echo "<script>
+                fncSweetAlert('error', 'ID de presupuesto inválido', 'index.php');
+            </script>";
             return;
         }
 
@@ -424,7 +466,9 @@ class ControladorCarrito
 
         // Validar que el presupuesto exista
         if (!$modeloCarrito->presupuestoExiste($idPresupuesto)) {
-            echo "<script>alert('Presupuesto no encontrado'); window.location.href='index.php';</script>";
+            echo "<script>
+                fncSweetAlert('warning', 'Presupuesto no encontrado', 'index.php');
+            </script>";
             return;
         }
 
@@ -459,7 +503,10 @@ class ControladorCarrito
             $cantidades = $_POST['cantidad'] ?? [];
 
             if (empty($productosSeleccionados) && empty($serviciosSeleccionados)) {
-                echo "<script>alert('Debe seleccionar al menos un producto o servicio'); window.history.back();</script>";
+                echo "<script>
+                    fncSweetAlert('warning', 'Debe seleccionar al menos un producto o servicio', null);
+                    window.history.back();
+                </script>";
                 return;
             }
 
@@ -467,10 +514,17 @@ class ControladorCarrito
             $resultado = $modeloCarrito->guardarItemEnPresupuesto($idPresupuesto, $productosSeleccionados, $serviciosSeleccionados, $cantidades);
 
             if (isset($resultado['error'])) {
-                echo "<script>alert('{$resultado['error']}'); window.history.back();</script>";
+                
+                $msg = addslashes($resultado['error']);
+                echo "<script>
+                    fncSweetAlert('error', '{$msg}', null);
+                    window.history.back();
+                </script>";
             } else {
-                echo "<script>alert('Ítems agregados correctamente'); 
-                  window.location.href='index.php?controlador=carrito&accion=verPresupuesto&id={$idPresupuesto}';</script>";
+                $url = "index.php?controlador=carrito&accion=verPresupuesto&id={$idPresupuesto}";
+                echo "<script>
+                    fncSweetAlert('success', 'Ítems agregados correctamente', '{$url}');
+                </script>";
             }
         }
     }
@@ -481,7 +535,9 @@ class ControladorCarrito
     public function editarItem()
     {
         if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-            echo "<script>alert('ID inválido'); window.location.href='index.php';</script>";
+            echo "<script>
+                fncSweetAlert('error', 'ID inválido', 'index.php');
+            </script>";
             return;
         }
 
@@ -490,13 +546,17 @@ class ControladorCarrito
 
         $item = $modeloCarrito->obtenerItemListaPorId($idItem);
         if (!$item) {
-            echo "<script>alert('Ítem no encontrado'); window.location.href='index.php';</script>";
+            echo "<script>
+                fncSweetAlert('warning', 'Ítem no encontrado', 'index.php');
+            </script>";
             return;
         }
 
         $producto = $modeloCarrito->obtenerProductoPorIdLista($item['Productos_idProductos']);
         if (!$producto) {
-            echo "<script>alert('Producto/servicio no encontrado'); window.location.href='index.php';</script>";
+            echo "<script>
+                fncSweetAlert('warning', 'Producto/servicio no encontrado', 'index.php');
+            </script>";
             return;
         }
 
@@ -541,8 +601,10 @@ class ControladorCarrito
                 throw new Exception($resultado['error']);
             }
 
-            echo "<script>alert('Ítem actualizado correctamente'); 
-              window.location.href='index.php?controlador=carrito&accion=verPresupuesto&id={$idPresupuesto}';</script>";
+            $url = "index.php?controlador=carrito&accion=verPresupuesto&id={$idPresupuesto}";
+            echo "<script>
+                fncSweetAlert('success', 'Ítem actualizado correctamente', '{$url}');
+            </script>";
         } catch (Throwable $e) {
             echo "<pre style='background:#111;color:#0f0;padding:15px;border-radius:10px'>
         <b>Error:</b> {$e->getMessage()}<br>
@@ -557,7 +619,9 @@ class ControladorCarrito
     public function eliminarItem()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['id'])) {
-            echo "<script>alert('Petición inválida'); window.location.href='index.php';</script>";
+            echo "<script>
+                fncSweetAlert('error', 'Petición inválida', 'index.php');
+            </script>";
             return;
         }
 
@@ -567,12 +631,18 @@ class ControladorCarrito
         $resultado = $modeloCarrito->eliminarItemDelPresupuesto($idLista);
 
         if (isset($resultado['error'])) {
-            echo "<script>alert('{$resultado['error']}'); window.location.href='index.php';</script>";
+            $msg = addslashes($resultado['error']);
+            echo "<script>
+                fncSweetAlert('error', '{$msg}', 'index.php');
+            </script>";
         } else {
             $idPresupuesto = $resultado['idPresupuesto'];
             $modeloCarrito->actualizarTotalPresupuesto($idPresupuesto);
-            echo "<script>alert('Ítem eliminado correctamente'); window.location.href='index.php?controlador=carrito&accion=verPresupuesto&id={$idPresupuesto}';</script>";
+            $url = "index.php?controlador=carrito&accion=verPresupuesto&id={$idPresupuesto}";
+            echo "<script>
+                fncSweetAlert('success', 'Ítem eliminado correctamente', '{$url}');
+            </script>";
         }
-        $idPresupuesto = $resultado['idPresupuesto'];
+        // $idPresupuesto = $resultado['idPresupuesto']; // ya no necesario
     }
 }

@@ -18,3 +18,4 @@ istx xkmc lgxz nfai
     private $sid = 'AC6ae2ed098005d3c5f4ef9493acd00440';  // 🔹 reemplazá por el tuyo
     private $token = 'a56eb3cf56143639ab67e575b0bf2d77';
 
+NO PUEDO BORRAR EL VENDEDOR IDUSUARIO=1, FIJARSE EL METODO CONFIRMAR()

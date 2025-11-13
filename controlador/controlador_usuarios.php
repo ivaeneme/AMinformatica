@@ -1,5 +1,4 @@
 <?php
-require_once "utils/twilio_sms.php";
 
 class ControladorUsuarios
 {
@@ -76,7 +75,7 @@ INGRESO DE USUARIO
                 echo '<script>fncSweetAlert("error", "Error al enviar el correo. Intente más tarde.");</script>';
             }
         } else {
-            include "vistas/modulo/recuperar_contrasena.php";
+            include "vistas/modulo/recuperarcontrasena.php";
         }
     }
 
@@ -138,7 +137,7 @@ INGRESO DE USUARIO
 
              echo '<script>fncSweetAlert("success", "Contraseña actualizada correctamente. Ya puedes iniciar sesión.", "index.php?pagina=login");</script>';
         } else {
-            include "vistas/modulo/resetcontraseña.php";
+            include "vistas/modulo/resetcontrasena.php";
         }
     }
 

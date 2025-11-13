@@ -153,7 +153,7 @@ $url = ControladorPlantilla::url();
                     $rutas[0] == "recuperarcontrasena" ||
                     $rutas[0] == "verificar_token" ||
                     $rutas[0] == "resetcontrasena"||
-                    $rutas[0] == "cambiarcontrasena"
+                    $rutas[0] == "cambiarcontrasena" 
 
                 ) {
 

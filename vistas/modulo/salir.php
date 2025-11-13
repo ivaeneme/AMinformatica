@@ -1,5 +1,10 @@
 <?php
 session_destroy();
-echo '<script>
-window.location = "http://localhost/aminformatica/index.php";
-</script>';
+echo "
+<script>
+  fncSweetAlert('success', 'Sesión cerrada correctamente.');
+  setTimeout(() => {
+    window.location.href = '{$url}index.php';
+  }, 1800);
+</script>
+";

@@ -4,6 +4,6 @@
         include 'vistas/plantilla.php';
     }
     static public function url(){
-        return 'http://localhost/aminformatica/';
+        return 'http://localhost/proyecto/';
     }
  }
