@@ -74,21 +74,6 @@ class ModeloUsuarios
         }
     }
 
-    public static function mdlObtenerClientes()
-    {
-        try {
-            $stmt = Conexion::conectar()->prepare("
-            SELECT id_usuario, nombre_usuario 
-            FROM usuarios 
-            WHERE Rol_idRol = 2
-        ");
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            return [];
-        }
-    }
-
 
     public static function mdlBuscarUsuarios($filtro)
     {

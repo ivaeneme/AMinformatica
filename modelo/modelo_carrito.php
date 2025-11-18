@@ -102,17 +102,91 @@ class ModeloCarrito
     }
 
 
-    // ================================================== GESTION DE PRESUPUESTO (vendedor/admin)=============================================================
-
     public function mdlinsertarPresupuesto($clienteId, $total)
     {
         $pdo = Conexion::conectar();
+
+        // IDs deseados por defecto
+        $defaultTecnico         = 1;
+        $defaultUsuarioTecnico  = 1;
+        $defaultVendedor        = 1;
+        $defaultUsuarioVendedor = 1;
+
+        // ================================
+        //  FUNCION AUXILIAR findOrFallback
+        // ================================
+        $findOrFallback = function ($pdo, $table, $idField, $defaultId) {
+            // 1) ¿Existe el ID por defecto?
+            $stmt = $pdo->prepare("SELECT $idField FROM $table WHERE $idField = ?");
+            $stmt->execute([$defaultId]);
+            if ($stmt->fetch()) {
+                return $defaultId;
+            }
+
+            // 2) Buscar cualquier registro válido
+            $stmt = $pdo->query("SELECT $idField FROM $table ORDER BY $idField LIMIT 1");
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                return $row[$idField];
+            }
+
+            // 3) No hay registros en la tabla
+            return null;
+        };
+
+        // ================================
+        //    BUSCAR CANDIDATOS VALIDOS
+        // ================================
+
+        // tecnico.idtecnico
+        $idTecnico = $findOrFallback($pdo, 'tecnico', 'idtecnico', $defaultTecnico);
+        if (!$idTecnico) {
+            throw new Exception('No existen técnicos disponibles en el sistema');
+        }
+
+        // usuarios.id_usuario (usuario técnico)
+        $idUsuarioTecnico = $findOrFallback($pdo, 'usuarios', 'id_usuario', $defaultUsuarioTecnico);
+        if (!$idUsuarioTecnico) {
+            throw new Exception('No existen usuarios asignables como técnico');
+        }
+
+        // vendedor.idVendedor
+        $idVendedor = $findOrFallback($pdo, 'vendedor', 'idVendedor', $defaultVendedor);
+        if (!$idVendedor) {
+            throw new Exception('No existen vendedores disponibles');
+        }
+
+        // usuarios.id_usuario (usuario vendedor)
+        $idUsuarioVendedor = $findOrFallback($pdo, 'usuarios', 'id_usuario', $defaultUsuarioVendedor);
+        if (!$idUsuarioVendedor) {
+            throw new Exception('No existen usuarios asignables como vendedor');
+        }
+
+        // ================================
+        //        INSERTAR PRESUPUESTO
+        // ================================
+
         $stmt = $pdo->prepare("INSERT INTO presupuesto 
-            (Cliente_idCliente, ListaPresupuesto_idListaPresupuesto, costoTotal, estado_presupuesto, fechaEmision, fecha_vencimiento, tecnico_idtecnico, tecnico_Usuario_idUsuario, Vendedor_idVendedor, Vendedor_Usuario_idUsuario)
-            VALUES (?, NULL, ?, ?, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 30 DAY), 1, 1, 1, 1)");
-        $stmt->execute([$clienteId, $total, 1]);
+        (Cliente_idCliente, ListaPresupuesto_idListaPresupuesto, costoTotal, estado_presupuesto,
+         fechaEmision, fecha_vencimiento,
+         tecnico_idtecnico, tecnico_Usuario_idUsuario,
+         Vendedor_idVendedor, Vendedor_Usuario_idUsuario)
+        VALUES (?, NULL, ?, ?, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 7 DAY),
+                ?, ?, ?, ?)");
+
+        $stmt->execute([
+            $clienteId,
+            $total,
+            1,                   // estado_presupuesto = 1 (creado)
+            $idTecnico,
+            $idUsuarioTecnico,
+            $idVendedor,
+            $idUsuarioVendedor
+        ]);
+
         return $pdo->lastInsertId();
     }
+
 
     public function insertarProductoPresupuesto($mercaderiaId, $servicioId, $cantidad, $estado_servicio = null)
     {
@@ -136,12 +210,8 @@ class ModeloCarrito
         return $pdo->lastInsertId();
     }
 
-    public function actualizarPresupuestoConLista($idPresupuesto, $idLista)
-    {
-        $pdo = Conexion::conectar();
-        $stmt = $pdo->prepare("UPDATE presupuesto SET ListaPresupuesto_idListaPresupuesto = ? WHERE idPresupuesto = ?");
-        $stmt->execute([$idLista, $idPresupuesto]);
-    }
+
+    // ================================================== GESTION DE PRESUPUESTO (vendedor/admin)=============================================================
 
 
     public function obtenerPresupuestoPorId($idPresupuesto)
@@ -378,13 +448,6 @@ class ModeloCarrito
 
     // ===================================================== DETALLE DE PRESPUESTO =============================================================
 
-        public function obtenerEstadoPresupuesto($idPresupuesto)
-    {
-        $pdo = Conexion::conectar();
-        $stmt = $pdo->prepare("SELECT estado FROM presupuesto WHERE idPresupuesto = ?");
-        $stmt->execute([$idPresupuesto]);
-        return (int) $stmt->fetchColumn();
-    }
 
     public function obtenerIdServicioPorPresupuesto($idPresupuesto)
     {
